@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system deps (if additional libs are needed add here)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements_extra.txt ./requirements_extra.txt
+
+RUN pip install --no-cache-dir -r requirements_extra.txt
+
+COPY sec_multi.py /app/sec_multi.py
+
+# Create non-root user
+RUN useradd --system --no-create-home appuser && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8080
+
+ENV LISTEN_HOST=0.0.0.0 \
+    LISTEN_PORT=8080 \
+    TARGET_URL=https://example.com \
+    LOG_DB=/data/logs.db \
+    LOG_CSV=/data/logs.csv \
+    LOG_TXT=/data/logs.txt \
+    LOG_SQL=/data/logs.sql
+
+VOLUME ["/data"]
+
+# Run with gunicorn binding to sec_multi:app
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "sec_multi:app"]
