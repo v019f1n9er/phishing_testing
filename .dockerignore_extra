@@ -3,9 +3,8 @@ __pycache__
 *.pyo
 *.pyd
 env/
-venv/
+.venv/
 .git
-.gitignore
 *.db
 *.sqlite
 *.sql
