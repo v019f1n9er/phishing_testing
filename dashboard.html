@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru"> <!-- задаём язык документа -->
+<head>
+    <meta charset="UTF-8"> <!-- кодировка -->
+    <title>Phishing Awareness Dashboard</title> <!-- заголовок страницы -->
+    <style>
+        body { font-family: Arial; }  /* шрифт для всего документа */
+        table { border-collapse: collapse; width: 100%; } /* таблица без двойных границ, на всю ширину */
+        th, td {
+            border: 1px solid #333;  /* границы ячеек */
+            padding: 6px;            /* внутренние отступы */
+            font-size: 14px;         /* размер текста */
+        }
+        th { background: #eee; } /* фон заголовков */
+    </style>
+</head>
+<body>
+
+<h1 style="color:red">TEMPLATE VERSION 1</h1> <!-- визуальная метка шаблона -->
+<h2>Журнал переходов по фишинговым ссылкам</h2> <!-- заголовок секции -->
+
+<p><b>Пример фишинговой ссылки:</b><br>
+<code>http://SERVER_IP:8080/track/user123</code> <!-- пример ссылки, которую кликнет пользователь -->
+</p>
+
+<p>Rows count: {{ data|length }}</p> <!-- количество записей, переданных из Python -->
+
+<table>
+    <tr>
+        <th>Время</th>
+        <th>IP</th>
+        <th>User-Agent</th>
+        <th>Token</th>
+    </tr>
+
+{% for row in data %} <!-- цикл Jinja для каждой строки данных из Excel -->
+<tr>
+    <td>{{ row["Timestamp"] }}</td> <!-- время клика -->
+    <td>{{ row["IP Address"] }}</td> <!-- IP пользователя -->
+    <td>{{ row["User-Agent"] }}</td> <!-- User-Agent -->
+    <td>{{ row["Token"] }}</td> <!-- идентификатор ссылки -->
+</tr>
+{% endfor %} <!-- конец цикла -->
+
+</table>
+
+</body>
+</html>
