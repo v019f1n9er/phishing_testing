@@ -176,4 +176,4 @@ def track(token):
 # Если файл запускается напрямую
 if __name__ == '__main__':
     initialize_excel()  # Инициализация Excel (создание при отсутствии)
-    app.run(host='0.0.0.0', port=8080, debug=True)  # Запуск Flask-сервера на всех интерфейсах, порт 8080, debug-режим
+    app.run(host='0.0.0.0', port=8080, debug=False)  # Запуск Flask-сервера на всех интерфейсах, порт 8080, debug-режим

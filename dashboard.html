@@ -24,13 +24,27 @@
 </p>
 
 <h3>Выгрузка отчёта</h3>
-<ul>
-    <li><a href="/export/excel">📊 Excel</a></li>
-    <li><a href="/export/txt">📄 TXT</a></li>
-    <li><a href="/export/sql">🧠 SQL</a></li>
-    <li><a href="/export/db">🗄 SQLite DB</a></li>
-</ul>
 
+<select id="exportFormat">
+    <option value="">-- Выберите формат --</option>
+    <option value="excel">Excel (.xlsx)</option>
+    <option value="txt">TXT (.txt)</option>
+    <option value="sql">SQL (.sql)</option>
+    <option value="db">SQLite (.db)</option>
+</select>
+
+<button onclick="downloadReport()">Скачать</button>
+
+<script>
+function downloadReport() {
+    const format = document.getElementById("exportFormat").value;
+    if (!format) {
+        alert("Выберите формат выгрузки");
+        return;
+    }
+    window.location.href = `/export/${format}`;
+}
+</script>
 
 <p>Rows count: {{ data|length }}</p> <!-- количество записей, переданных из Python -->
 
