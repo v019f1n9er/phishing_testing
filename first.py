@@ -1,4 +1,7 @@
 import os  # модуль для работы с файловой системой (пути, проверка существования файлов)
+import sqlite3
+from flask import send_file
+from io import BytesIO, StringIO
 from flask import Flask, redirect, request, render_template  # Flask для веб-сервиса, render_template для HTML-шаблонов
 import pandas as pd  # pandas для работы с Excel (чтение, запись, таблицы)
 from datetime import datetime  # datetime для получения текущей даты и времени
@@ -28,6 +31,87 @@ def initialize_excel():
         ])
         # Сохраняем DataFrame в Excel
         df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
+
+
+# Универсальная функция чтения данных
+def get_report_df():
+    return pd.read_excel(EXCEL_FILE, engine='openpyxl')
+@app.route('/export/excel')
+def export_excel():
+    df = get_report_df()
+
+    buffer = BytesIO()
+    df.to_excel(buffer, index=False, engine='openpyxl')
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name='phishing_report.xlsx',
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+@app.route('/export/txt')
+def export_txt():
+    df = get_report_df()
+
+    buffer = StringIO()
+    for _, row in df.iterrows():
+        buffer.write(
+            f"{row['Timestamp']} | {row['IP Address']} | "
+            f"{row['User-Agent']} | {row['Token']}\n"
+        )
+
+    return send_file(
+        BytesIO(buffer.getvalue().encode('utf-8')),
+        as_attachment=True,
+        download_name='phishing_report.txt',
+        mimetype='text/plain'
+    )
+@app.route('/export/sql')
+def export_sql():
+    df = get_report_df()
+
+    buffer = StringIO()
+    buffer.write("""CREATE TABLE clicks (
+        timestamp TEXT,
+        ip TEXT,
+        user_agent TEXT,
+        token TEXT
+    );\n\n""")
+
+    for _, row in df.iterrows():
+        buffer.write(
+            "INSERT INTO clicks VALUES "
+            f"('{row['Timestamp']}', '{row['IP Address']}', "
+            f"'{row['User-Agent']}', '{row['Token']}');\n"
+        )
+
+    return send_file(
+        BytesIO(buffer.getvalue().encode('utf-8')),
+        as_attachment=True,
+        download_name='phishing_report.sql',
+        mimetype='application/sql'
+    )
+@app.route('/export/db')
+def export_db():
+    df = get_report_df()
+
+    buffer = BytesIO()
+    conn = sqlite3.connect(':memory:')
+    df.to_sql('clicks', conn, index=False, if_exists='replace')
+
+    for line in conn.iterdump():
+        buffer.write(f"{line}\n".encode())
+
+    conn.close()
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name='phishing_report.db',
+        mimetype='application/octet-stream'
+    )
 
 
 # -----------------------------
