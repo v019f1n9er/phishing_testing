@@ -1,75 +1,95 @@
-import os  # модуль для работы с файловой системой (пути, проверка существования файлов)
+import os
 import sqlite3
-from flask import send_file
+from flask import Flask, redirect, request, render_template, send_file
 from io import BytesIO, StringIO
-from flask import Flask, redirect, request, render_template  # Flask для веб-сервиса, render_template для HTML-шаблонов
-import pandas as pd  # pandas для работы с Excel (чтение, запись, таблицы)
-from datetime import datetime  # datetime для получения текущей даты и времени
+from datetime import datetime
+import pandas as pd  # Для экспорта в Excel
 
 # Определяем базовую директорию, где находится текущий файл
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Инициализация Flask-приложения, указываем директорию шаблонов как BASE_DIR
+# Инициализация Flask-приложения
 app = Flask(__name__, template_folder=BASE_DIR)
 
-# Полный путь к Excel-файлу, где будут храниться логи
-EXCEL_FILE = os.path.join(BASE_DIR, 'phishing_data.xlsx')
+# Путь к базе данных SQLite
+DATABASE = os.path.join(BASE_DIR, 'phishing_data.db')
 
 
 # -----------------------------
-# Excel init
+# DB init
 # -----------------------------
-# Функция для создания Excel-файла, если его ещё нет
-def initialize_excel():
-    if not os.path.exists(EXCEL_FILE):  # проверяем, существует ли файл
-        # Создаём пустой DataFrame с нужными столбцами
-        df = pd.DataFrame(columns=[
-            "Timestamp",  # время клика
-            "IP Address",  # IP пользователя
-            "User-Agent",  # браузер / устройство
-            "Token"       # уникальный идентификатор фишинговой ссылки
-        ])
-        # Сохраняем DataFrame в Excel
-        df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
+def initialize_db():
+    """Функция для инициализации базы данных, если она еще не существует"""
+    if not os.path.exists(DATABASE):  # Если база данных не существует
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE clicks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            ip TEXT,
+            user_agent TEXT,
+            token TEXT
+        )''')
+        conn.commit()
+        conn.close()
 
 
-# Универсальная функция чтения данных
-def get_report_df():
-    return pd.read_excel(EXCEL_FILE, engine='openpyxl')
+# -----------------------------
+# Чтение данных из базы
+# -----------------------------
+def get_report_data():
+    """Извлечение данных из базы данных"""
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM clicks")  # Извлекаем все данные
+    data = cursor.fetchall()
+    conn.close()
+
+    # Преобразуем данные в список словарей
+    return [
+        {"id": row[0], "timestamp": row[1], "ip": row[2], "user_agent": row[3], "token": row[4]}
+        for row in data
+    ]
+
+
+# -----------------------------
+# Экспорт данных
+# -----------------------------
 @app.route('/export/excel')
 def export_excel():
-    df = get_report_df()
+    """Экспорт данных в Excel файл"""
+    data = get_report_data()
+    if not data:
+        return "Нет данных для экспорта", 400  # Если нет данных
 
+    # Создаем DataFrame
+    df = pd.DataFrame(data)
+
+    # Экспортируем в Excel
     buffer = BytesIO()
-    df.to_excel(buffer, index=False, engine='openpyxl')
-    buffer.seek(0)
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Phishing Report')
 
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name='phishing_report.xlsx',
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name='phishing_report.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
 @app.route('/export/txt')
 def export_txt():
-    df = get_report_df()
+    """Экспорт данных в текстовый файл (.txt)"""
+    data = get_report_data()
 
     buffer = StringIO()
-    for _, row in df.iterrows():
-        buffer.write(
-            f"{row['Timestamp']} | {row['IP Address']} | "
-            f"{row['User-Agent']} | {row['Token']}\n"
-        )
+    for row in data:
+        buffer.write(f"{row['timestamp']} | {row['ip']} | {row['user_agent']} | {row['token']}\n")
 
-    return send_file(
-        BytesIO(buffer.getvalue().encode('utf-8')),
-        as_attachment=True,
-        download_name='phishing_report.txt',
-        mimetype='text/plain'
-    )
+    return send_file(BytesIO(buffer.getvalue().encode('utf-8')), as_attachment=True, download_name='phishing_report.txt', mimetype='text/plain')
+
+
 @app.route('/export/sql')
 def export_sql():
-    df = get_report_df()
+    """Экспорт данных в SQL-формат (.sql)"""
+    data = get_report_data()
 
     buffer = StringIO()
     buffer.write("""CREATE TABLE clicks (
@@ -79,101 +99,74 @@ def export_sql():
         token TEXT
     );\n\n""")
 
-    for _, row in df.iterrows():
-        buffer.write(
-            "INSERT INTO clicks VALUES "
-            f"('{row['Timestamp']}', '{row['IP Address']}', "
-            f"'{row['User-Agent']}', '{row['Token']}');\n"
-        )
+    for row in data:
+        buffer.write(f"INSERT INTO clicks VALUES ('{row['timestamp']}', '{row['ip']}', '{row['user_agent']}', '{row['token']}');\n")
 
-    return send_file(
-        BytesIO(buffer.getvalue().encode('utf-8')),
-        as_attachment=True,
-        download_name='phishing_report.sql',
-        mimetype='application/sql'
-    )
+    return send_file(BytesIO(buffer.getvalue().encode('utf-8')), as_attachment=True, download_name='phishing_report.sql', mimetype='application/sql')
+
+
 @app.route('/export/db')
 def export_db():
-    df = get_report_df()
+    """Экспорт данных в SQLite базу данных (.db)"""
+    data = get_report_data()
 
     buffer = BytesIO()
-    conn = sqlite3.connect(':memory:')
-    df.to_sql('clicks', conn, index=False, if_exists='replace')
+    conn = sqlite3.connect(':memory:')  # Временная база данных в памяти
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE clicks (timestamp TEXT, ip TEXT, user_agent TEXT, token TEXT)''')
 
+    for row in data:
+        cursor.execute("INSERT INTO clicks (timestamp, ip, user_agent, token) VALUES (?, ?, ?, ?)",
+                       (row['timestamp'], row['ip'], row['user_agent'], row['token']))
+
+    # Экспорт в строковый формат
     for line in conn.iterdump():
         buffer.write(f"{line}\n".encode())
 
     conn.close()
     buffer.seek(0)
-
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name='phishing_report.db',
-        mimetype='application/octet-stream'
-    )
+    return send_file(buffer, as_attachment=True, download_name='phishing_report.db', mimetype='application/octet-stream')
 
 
 # -----------------------------
-# Log click
+# Логирование кликов
 # -----------------------------
-# Функция для записи клика по фишинговой ссылке в Excel
 def log_click(ip, user_agent, token):
-    # Читаем текущий Excel-файл
-    df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
-
-    # Добавляем новую строку с информацией о клике
-    df.loc[len(df)] = [
-        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  # текущее время в формате ГГГГ-ММ-ДД ЧЧ:ММ:СС
-        ip,  # IP пользователя
-        user_agent,  # User-Agent
-        token  # идентификатор ссылки
-    ]
-
-    # Сохраняем обновленный DataFrame обратно в Excel
-    df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
+    """Запись клика в базу данных"""
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO clicks (timestamp, ip, user_agent, token) VALUES (?, ?, ?, ?)",
+        (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), ip, user_agent, token)
+    )
+    conn.commit()
+    conn.close()
 
 
 # -----------------------------
-# Admin dashboard
+# Панель управления
 # -----------------------------
-# Маршрут для главной страницы с панелью администратора
 @app.route('/')
 def dashboard():
-    # Читаем все данные из Excel
-    df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
-    # Преобразуем данные в список словарей для Jinja-шаблона
-    data = df.to_dict(orient='records')
-    # Вывод в консоль для отладки, сколько строк рендерится
-    print("Rendering template with", len(data), "rows")
-    # Отправляем HTML-шаблон на рендеринг вместе с данными
+    """Отображение панели с данными о переходах по фишинговым ссылкам"""
+    data = get_report_data()
     return render_template('dashboard.html', data=data)
 
 
 # -----------------------------
-# Phishing link
+# Отслеживание фишинговых ссылок
 # -----------------------------
-# Маршрут для отслеживания перехода по фишинговой ссылке
 @app.route('/track/<token>')
 def track(token):
-    # Выводим в консоль токен для отладки
-    print("CLICK:", token)
-    # Выводим IP пользователя
-    print("IP:", request.remote_addr)
+    """Логирование перехода по фишинговой ссылке"""
+    ip = request.remote_addr  # IP-адрес пользователя
+    user_agent = request.headers.get('User-Agent', 'unknown')  # User-Agent браузера
 
-    # Получаем IP пользователя
-    ip = request.remote_addr
-    # Получаем User-Agent браузера (или 'unknown', если его нет)
-    user_agent = request.headers.get('User-Agent', 'unknown')
-
-    # Логируем клик в Excel
-    log_click(ip, user_agent, token)
-
-    # Редирект на реальный сайт (https://ya.ru)
-    return redirect('https://ya.ru')
+    log_click(ip, user_agent, token)  # Логируем данные о клике
+    return redirect('https://ya.ru')  # Перенаправление на сайт
 
 
-# Если файл запускается напрямую
+# Запуск приложения
 if __name__ == '__main__':
-    initialize_excel()  # Инициализация Excel (создание при отсутствии)
-    app.run(host='0.0.0.0', port=8080, debug=False)  # Запуск Flask-сервера на всех интерфейсах, порт 8080, debug-режим
+    initialize_db()  # Инициализация базы данных
+    app.run(host='0.0.0.0', port=8080, debug=True)  # Запуск сервера Flask
