@@ -1,5 +1,23 @@
 # phishing_testing
 
+## Настройки безопасности
+В проекте присутствуют значения по умолчанию, которые <ins>**необходимо изменить перед началом эксплуатации**</ins>, а именно:
+- Файл `app.py` строка 26: по умолчанию
+  ```
+  app.secret_key = 'phishing-dashboard-2026-super-secret-key'
+  ```
+  значение параметра `app.secret_key` необходимо изменить на своё;
+
+- Файл `app.py` строка 36: по умолчанию:
+  `SESSION_COOKIE_SECURE=False`, если вы используете HTTPS, то небходимо сменить на `SESSION_COOKIE_SECURE=False`
+  
+- Файл `app.py` строки 94-95: по умолчанию
+  ```
+  'admin',
+  generate_password_hash('passwd123'),
+  ```
+  `admin` и `passwd123` - данные пользователя, создаваемого по-умолчанию в БД, <ins>**настоятельно рекомендуется**</ins> изменить имя пользователя и пароль на уникальные
+
 ## Запуск в Docker-контейнере
 Для того, чтобы запустить данный проект в Docker-контенере необходимо:
 1. Клонировать репозиторий:
@@ -24,4 +42,5 @@ docker run -d -p 8080:8080 --name phishing-dashboard-container phishing-dashboar
 5. После этого приложение будет доступно по адресу:
 `http://ip_docker_container:8080`
 <img width="1606" height="488" alt="image" src="https://github.com/user-attachments/assets/db7e5bf5-13d4-4438-9698-3057770621b1" />
+
 
