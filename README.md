@@ -44,9 +44,11 @@ docker run -d -p 8080:8080 --name phishing-dashboard-container phishing-dashboar
 > `--name phishing-dashboard-container` - присвоение имени контейнеру
 > 
 > `phishing-dashboard` - имя образа, на основе которого создается контейнер
-5. После этого приложение будет доступно по адресу:
-`http://ip_docker_container:8080`
+5. После этого приложение будет доступно по адресу: `http://ip_docker_container:8080`
+<img width="1606" height="488" alt="image" src="https://github.com/user-attachments/assets/c3fd679d-9572-44bf-9948-9720f4a6779e" />
+6. После успешной авторизации можно будет увидеть основной интерфейс проекта
 <img width="1606" height="488" alt="image" src="https://github.com/user-attachments/assets/db7e5bf5-13d4-4438-9698-3057770621b1" />
+
 
 
 
