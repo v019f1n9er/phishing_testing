@@ -29,7 +29,7 @@
             .content-wrapper {
                 width: 100%;
                 max-width: 100%;
-                padding: 0 10px; /* немного отступов слева и справа */
+                padding: 0 10px;
             }
         }
 
@@ -71,6 +71,16 @@
         .controls select, .controls button {
             transition: all 0.4s ease;
         }
+
+        /* Пользователь и кнопка выхода */
+        .user-logout {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -78,13 +88,24 @@
 <div class="container-fluid mt-4 content-wrapper">
 
     <!-- Header -->
-    <div class="card shadow-sm mb-4">
+    <div class="card shadow-sm mb-4 position-relative">
         <div class="card-body">
-            <h3 class="card-title text-danger mb-2">
-                Phishing Awareness Dashboard
-            </h3>
-            <p class="mb-1"><b>Пример ссылки:</b></p>
-            <code>http://SERVER_IP:8080/track/user123</code>
+
+            <!-- Название и пример ссылки -->
+            <div>
+                <h3 class="card-title text-danger mb-2">
+                    Phishing Awareness Dashboard
+                </h3>
+                <p class="mb-1"><b>Пример ссылки:</b></p>
+                <code>http://SERVER_IP:8080/track/user123</code>
+            </div>
+
+            <!-- Пользователь и кнопка Выйти -->
+            <div class="user-logout">
+                <div class="text-muted small mb-0">{{ session.username }}</div>
+                <a href="/logout" class="btn btn-outline-secondary btn-sm">Выйти</a>
+            </div>
+
         </div>
     </div>
 
@@ -135,6 +156,9 @@
 </div>
 
 <script>
+/* ---------------------------------------
+   Загрузка данных и работа с таблицей
+--------------------------------------- */
 async function loadTable() {
     const res = await fetch('/api/clicks');
     const data = await res.json();
@@ -172,9 +196,13 @@ async function deleteSelected() {
 
     const ids = Array.from(checked).map(cb => cb.value);
 
+    // CSRF защищённый fetch
     await fetch('/api/delete', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '{{ csrf_token() }}'
+        },
         body: JSON.stringify({ ids })
     });
 
@@ -190,7 +218,35 @@ function downloadReport() {
     window.location.href = `/export/${format}`;
 }
 
-// Инициализация
+/* ---------------------------------------
+   Таймер автовыхода (5 минут неактивности)
+--------------------------------------- */
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 минут в миллисекундах
+let idleTimer = null;
+
+// Функция выхода
+function logoutUser() {
+    alert('Сессия истекла из-за неактивности.');
+    window.location.href = '/logout';
+}
+
+// Сброс таймера при активности
+function resetIdleTimer() {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(logoutUser, IDLE_TIMEOUT_MS);
+}
+
+// События активности
+['mousemove', 'keypress', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetIdleTimer, true);
+});
+
+// Инициализация таймера при загрузке страницы
+resetIdleTimer();
+
+/* ---------------------------------------
+   Инициализация таблицы и событий
+--------------------------------------- */
 loadTable();
 setInterval(loadTable, 5000);
 
