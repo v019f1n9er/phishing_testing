@@ -10,8 +10,9 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем проект
-COPY app.py dashboard.html ./
+COPY app.py dashboard.html login.html./
 
 EXPOSE 8080
 
 CMD ["python", "app.py"]
+
