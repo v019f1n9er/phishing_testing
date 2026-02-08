@@ -12,5 +12,4 @@ COPY . .
 
 EXPOSE 8080
 
-# Запуск приложения
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]
