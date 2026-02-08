@@ -49,10 +49,11 @@ docker run -d -p 8080:8080 --name phishing-dashboard-container phishing-dashboar
 
 5. После этого приложение будет доступно по адресу: `http://ip_docker_container:8080`
 
-  <img width="1606" height="488" alt="image" src="https://github.com/user-attachments/assets/c3fd679d-9572-44bf-9948-9720f4a6779e" />
+   <img width="1606" height="488" alt="image" src="https://github.com/user-attachments/assets/c3fd679d-9572-44bf-9948-9720f4a6779e" />
   
 6. После успешной авторизации можно будет увидеть основной интерфейс проекта:
 
    <img width="1680" height="538" alt="image" src="https://github.com/user-attachments/assets/2aac88ff-8ccb-4aff-853e-67b3796050e9" />
 
    <img width="1646" height="878" alt="image" src="https://github.com/user-attachments/assets/c173e6e4-db19-4306-8ea5-0d69af7c08ea" />
+
