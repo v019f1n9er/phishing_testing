@@ -56,4 +56,5 @@ docker run -d -p 8080:8080 --name phishing-dashboard-container phishing-dashboar
    <img width="1680" height="538" alt="image" src="https://github.com/user-attachments/assets/2aac88ff-8ccb-4aff-853e-67b3796050e9" />
 
    <img width="1646" height="878" alt="image" src="https://github.com/user-attachments/assets/c173e6e4-db19-4306-8ea5-0d69af7c08ea" />
-
+   
+   <img width="1628" height="858" alt="image" src="https://github.com/user-attachments/assets/934b284b-d3ea-480e-8609-1bb6358b2850" />
