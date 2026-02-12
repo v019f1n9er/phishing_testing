@@ -23,19 +23,28 @@ def register_emails_routes(app):
             cursor = conn.cursor()
             cursor.execute("SELECT id, email, token, created_at FROM emails ORDER BY id DESC")
             rows = cursor.fetchall()
-            conn.close()
-
+            
             base_url = request.host_url.rstrip('/')
+            result = []
 
-            return jsonify([
-                {
-                    "id": r[0],
+            for r in rows:
+                email_id = r[0]
+                # Получаем количество кликов для этого email (по email_id)
+                cursor.execute("SELECT COUNT(*) FROM clicks WHERE email_id = ?", (email_id,))
+                clicks_count = cursor.fetchone()[0]
+                
+                result.append({
+                    "id": email_id,
                     "email": r[1],
                     "token": r[2],
                     "tracking_link": f"{base_url}/track/{r[2]}",
-                    "created_at": r[3]
-                } for r in rows
-            ])
+                    "created_at": r[3],
+                    "clicks_count": clicks_count,
+                    "is_used": clicks_count > 0
+                })
+            
+            conn.close()
+            return jsonify(result)
 
         emails_text = request.json.get('emails', '')
         if not emails_text:

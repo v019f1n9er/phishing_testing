@@ -22,7 +22,7 @@ import logging
 class IgnoreApiClicksFilter(logging.Filter):
     def filter(self, record):
         message = str(record.getMessage())
-        for pattern in ['/api/clicks', '/api/emails']:
+        for pattern in ['/api/clicks', '/api/emails', '/api/analytics']:
             if pattern in message:
                 return False
         return True

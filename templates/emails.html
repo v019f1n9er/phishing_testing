@@ -125,6 +125,7 @@
                 <div class="d-flex gap-2 mb-2">
                     <a href="/" class="btn btn-outline-secondary btn-sm">Dashboard</a>
                     <a href="/emails" class="btn btn-primary btn-sm">Email адреса</a>
+                    <a href="/analytics" class="btn btn-outline-success btn-sm">Аналитика</a>
                 </div>
             </div>
 
@@ -195,6 +196,7 @@
                         <th>ID</th>
                         <th>Email адрес</th>
                         <th>Ссылка для трекинга</th>
+                        <th>Статус</th>
                         <th>Дата добавления</th>
                     </tr>
                 </thead>
@@ -228,6 +230,17 @@ async function loadTable() {
         const tr = document.createElement('tr');
         const isChecked = checkedIds.has(row.id.toString());
         const trackingLink = row.tracking_link || '';
+        const isUsed = row.is_used || false;
+        const clicksCount = row.clicks_count || 0;
+        
+        // Создаем бейдж статуса
+        let statusBadge = '';
+        if (isUsed) {
+            statusBadge = `<span class="badge bg-success">Использовано (${clicksCount})</span>`;
+        } else {
+            statusBadge = `<span class="badge bg-warning text-dark">Не использовано</span>`;
+        }
+        
         tr.innerHTML = `
             <td><input type="checkbox" value="${row.id}" class="email-checkbox" ${isChecked ? 'checked' : ''}></td>
             <td>${row.id}</td>
@@ -245,6 +258,7 @@ async function loadTable() {
                     </div>
                 ` : '<span class="text-muted">-</span>'}
             </td>
+            <td>${statusBadge}</td>
             <td>${row.created_at || '-'}</td>
         `;
         tbody.appendChild(tr);

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Аналитика кликов - Phishing Dashboard</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: all 0.5s ease;
+            padding-bottom: 2rem;
+        }
+
+        .content-wrapper {
+            width: 80%;
+            max-width: 80%;
+            margin: 0 auto;
+            transition: all 0.5s ease;
+            padding-bottom: 2rem;
+        }
+
+        @media (max-width: 1000px) {
+            .content-wrapper {
+                width: 100%;
+                max-width: 100%;
+                padding: 0 10px;
+            }
+        }
+
+        .card, .d-flex {
+            transition: all 0.4s ease;
+        }
+
+        .analytics-card {
+            border-left: 4px solid #28a745;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .analytics-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #28a745;
+            margin: 0.5rem 0;
+        }
+
+        .analytics-label {
+            color: #6c757d;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-container {
+            margin-top: 1.5rem;
+        }
+
+        .progress {
+            height: 25px;
+            background-color: #e9ecef;
+        }
+
+        .progress-bar {
+            background-color: #28a745;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #28a745;
+        }
+
+        .metric-box .label {
+            color: #6c757d;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .metric-box .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .campaign-stats {
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #0d6efd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            color: #495057;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #0d6efd;
+        }
+
+        .user-logout {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50vh;
+        }
+
+        .spinner-border {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid mt-4 content-wrapper">
+
+    <!-- Header -->
+    <div class="card shadow-sm mb-4 position-relative">
+        <div class="card-body">
+            <div>
+                <h3 class="card-title text-success mb-2">
+                    Аналитика кликов
+                </h3>
+                <div class="d-flex gap-2 mb-2">
+                    <a href="/" class="btn btn-outline-danger btn-sm">Dashboard</a>
+                    <a href="/emails" class="btn btn-outline-primary btn-sm">Email адреса</a>
+                    <a href="/analytics" class="btn btn-success btn-sm">Аналитика</a>
+                </div>
+            </div>
+
+            <!-- Пользователь и кнопка Выйти -->
+            <div class="user-logout">
+                <div class="text-muted small mb-0">{{ session.username }}</div>
+                <a href="/logout" class="btn btn-outline-secondary btn-sm">Выйти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loadingSpinner" class="loading">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+    </div>
+
+    <!-- Analytics Content -->
+    <div id="analyticsContent" style="display: none;">
+
+        <!-- Main Metrics -->
+        <div class="metric-row">
+            <div class="metric-box">
+                <span class="label">Всего ссылок</span>
+                <div class="value" id="totalLinks">0</div>
+            </div>
+            <div class="metric-box">
+                <span class="label">Всего кликов</span>
+                <div class="value" id="totalClicks">0</div>
+            </div>
+            <div class="metric-box">
+                <span class="label">Ссылок с кликами</span>
+                <div class="value" id="uniqueClickedLinks">0</div>
+            </div>
+            <div class="metric-box">
+                <span class="label">% ссылок с кликами</span>
+                <div class="value" id="clickPercentage">0.00%</div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Процентное соотношение кликов</h6>
+                <div class="progress-container">
+                    <div class="progress">
+                        <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                            0%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Report -->
+        <div class="d-flex justify-content-between align-items-center mb-3 controls flex-wrap gap-2">
+            <div>
+                <span class="text-muted">Выгрузить отчет аналитики:</span>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <select id="analyticsExportFormat" class="form-select form-select-sm" style="width: auto;">
+                    <option value="">Формат отчёта</option>
+                    <option value="analytics_html">HTML (веб-страница)</option>
+                    <option value="analytics_excel">Excel (.xlsx)</option>
+                    <option value="analytics_txt">TXT (.txt)</option>
+                    <option value="analytics_json">JSON (.json)</option>
+                </select>
+
+                <button class="btn btn-success btn-sm" onclick="downloadAnalyticsReport()">
+                    Скачать
+                </button>
+            </div>
+        </div>
+
+        <!-- Detailed Stats -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Подробная статистика</h6>
+            </div>
+            <div class="card-body">
+                <div class="campaign-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Не открыто ссылок</span>
+                        <span class="stat-value" id="nonClicked">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">CTR (Click-Through Rate)</span>
+                        <span class="stat-value" id="ctr">0.00%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Конверсия</span>
+                        <span class="stat-value" id="conversion">0.00%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+/* Загрузка аналитики */
+async function loadAnalytics() {
+    try {
+        const response = await fetch('/api/analytics');
+        const data = await response.json();
+
+        // Обновляем основные метрики
+        document.getElementById('totalLinks').textContent = data.total_links;
+        document.getElementById('totalClicks').textContent = data.total_clicks;
+        document.getElementById('uniqueClickedLinks').textContent = data.unique_clicked_links;
+        document.getElementById('clickPercentage').textContent = data.click_percentage.toFixed(2) + '%';
+        document.getElementById('nonClicked').textContent = data.non_clicked;
+
+        // Обновляем прогресс-бар
+        const percentage = data.click_percentage;
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = percentage + '%';
+        progressBar.textContent = percentage.toFixed(2) + '%';
+
+        // CTR и Конверсия (одинаковые в данном случае)
+        document.getElementById('ctr').textContent = data.click_percentage.toFixed(2) + '%';
+        document.getElementById('conversion').textContent = data.click_percentage.toFixed(2) + '%';
+
+        // Скрываем загрузку, показываем контент
+        document.getElementById('loadingSpinner').style.display = 'none';
+        document.getElementById('analyticsContent').style.display = 'block';
+
+    } catch (error) {
+        console.error('Ошибка при загрузке аналитики:', error);
+        document.getElementById('loadingSpinner').innerHTML = 
+            '<div class="alert alert-danger">Ошибка при загрузке данных аналитики</div>';
+    }
+}
+
+function downloadAnalyticsReport() {
+    const format = document.getElementById('analyticsExportFormat').value;
+    if (!format) {
+        alert('Выберите формат отчёта');
+        return;
+    }
+    window.location.href = `/export/${format}`;
+}
+
+/* Таймер автовыхода (5 минут неактивности) */
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
+let idleTimer = null;
+
+function logoutUser() {
+    alert('Сессия истекла из-за неактивности.');
+    window.location.href = '/logout';
+}
+
+function resetIdleTimer() {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(logoutUser, IDLE_TIMEOUT_MS);
+}
+
+['mousemove', 'keypress', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetIdleTimer, true);
+});
+
+// Инициализация
+resetIdleTimer();
+loadAnalytics();
+
+// Обновление аналитики каждые 10 секунд
+setInterval(loadAnalytics, 10000);
+</script>
+
+</body>
+</html>

@@ -7,3 +7,8 @@ def register_dashboard_routes(app):
     @login_required
     def dashboard():
         return render_template('dashboard.html')
+
+    @app.route('/analytics')
+    @login_required
+    def analytics():
+        return render_template('analytics.html')
