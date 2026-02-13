@@ -281,7 +281,7 @@ async function loadTable() {
 }
 
 function copyLink(link, button) {
-    navigator.clipboard.writeText(link).then(() => {
+    function showSuccess() {
         const originalHTML = button.innerHTML;
         button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>';
         button.classList.remove('btn-outline-secondary');
@@ -291,9 +291,38 @@ function copyLink(link, button) {
             button.classList.remove('btn-success');
             button.classList.add('btn-outline-secondary');
         }, 2000);
-    }).catch(err => {
-        alert('Не удалось скопировать ссылку');
-    });
+    }
+
+    function fallbackCopy(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showSuccess();
+        } catch (err) {
+            document.body.removeChild(textArea);
+            alert('Не удалось скопировать ссылку');
+        }
+    }
+
+    // Пытаемся использовать moderne Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(() => {
+            showSuccess();
+        }).catch(err => {
+            // Fallback на старый метод при ошибке
+            fallbackCopy(link);
+        });
+    } else {
+        // Для браузеров без поддержки Clipboard API
+        fallbackCopy(link);
+    }
 }
 
 function toggleSelectAll() {
