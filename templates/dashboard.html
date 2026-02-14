@@ -148,7 +148,7 @@
             <table class="table table-striped table-hover table-sm mb-0" id="clicksTable">
                 <thead class="table-dark">
                     <tr>
-                        <th style="width:40px"></th>
+                        <th style="width:40px"><input id="selectAll" type="checkbox" aria-label="Выбрать все"></th>
                         <th>Время</th>
                         <th>IP</th>
                         <th>User-Agent</th>
@@ -166,6 +166,40 @@
 /* ---------------------------------------
    Загрузка данных и работа с таблицей
 --------------------------------------- */
+// Набор выбранных id — сохраняем между перезагрузками таблицы
+const selectedIds = new Set();
+
+// Делегированный обработчик изменений чекбоксов в таблице
+document.addEventListener('change', (e) => {
+    const cb = e.target;
+    if (!cb) return;
+
+    // Главный чекбокс "Выбрать все"
+    if (cb.id === 'selectAll') {
+        const checked = cb.checked;
+        document.querySelectorAll('#clicksTable tbody input[type="checkbox"]').forEach(c => {
+            c.checked = checked;
+            const id = String(c.value);
+            if (checked) selectedIds.add(id);
+            else selectedIds.delete(id);
+        });
+        return;
+    }
+
+    // Индивидуальные чекбоксы в теле таблицы
+    if (cb.matches && cb.matches('#clicksTable tbody input[type="checkbox"]')) {
+        const id = String(cb.value);
+        if (cb.checked) selectedIds.add(id);
+        else selectedIds.delete(id);
+
+        // Обновляем состояние главного чекбокса
+        const all = document.querySelectorAll('#clicksTable tbody input[type="checkbox"]');
+        const checked = document.querySelectorAll('#clicksTable tbody input[type="checkbox"]:checked');
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) selectAll.checked = (all.length > 0 && checked.length === all.length);
+    }
+});
+
 async function loadTable() {
     const res = await fetch('/api/clicks');
     const data = await res.json();
@@ -176,7 +210,7 @@ async function loadTable() {
     data.forEach(row => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="checkbox" value="${row.id}"></td>
+            <td><input type="checkbox" value="${row.id}" ${selectedIds.has(String(row.id)) ? 'checked' : ''}></td>
             <td>${row.timestamp}</td>
             <td>${row.ip}</td>
             <td class="text-truncate ua-col">${row.user_agent}</td>
@@ -187,6 +221,12 @@ async function loadTable() {
 
     document.getElementById('rowCount').innerText =
         `Всего записей: ${data.length}`;
+
+    // Обновляем состояние главного чекбокса после перерисовки таблицы
+    const all = document.querySelectorAll('#clicksTable tbody input[type="checkbox"]');
+    const checked = document.querySelectorAll('#clicksTable tbody input[type="checkbox"]:checked');
+    const selectAll = document.getElementById('selectAll');
+    if (selectAll) selectAll.checked = (all.length > 0 && checked.length === all.length);
 }
 
 async function deleteSelected() {
@@ -212,6 +252,9 @@ async function deleteSelected() {
         },
         body: JSON.stringify({ ids })
     });
+
+    // Удаляем удалённые id из набора выбранных, чтобы не пытаться восстановить их при перезагрузке
+    ids.forEach(id => selectedIds.delete(String(id)));
 
     loadTable();
 }

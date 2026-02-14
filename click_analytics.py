@@ -44,14 +44,16 @@ class ClickAnalytics:
     
     def get_click_percentage(self) -> float:
         """
-        Возвращает процент уникальных ссылок, на которые были клики
-        
+        Возвращает процентное соотношение общего числа кликов к общему числу ссылок.
+
+        Если кликов больше, чем ссылок, процент может превышать 100%.
+
         Returns:
-            float: процент кликов (0-100) - доля ссылок, на которые был хотя бы один клик
+            float: процент кликов (может быть >100) — (total_clicks / total_links) * 100
         """
         if self.total_links == 0:
             return 0.0
-        return round((self.unique_clicked_links / self.total_links) * 100, 2)
+        return round((self.total_clicks / self.total_links) * 100, 2)
     
     def get_analytics_report(self) -> dict:
         """

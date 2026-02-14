@@ -198,11 +198,11 @@
                 <div class="value" id="totalClicks">0</div>
             </div>
             <div class="metric-box">
-                <span class="label">Ссылок с кликами</span>
+                <span class="label">Количество использованных ссылок</span>
                 <div class="value" id="uniqueClickedLinks">0</div>
             </div>
             <div class="metric-box">
-                <span class="label">% ссылок с кликами</span>
+                <span class="label">Соотношение ссылок и кликов по ним</span>
                 <div class="value" id="clickPercentage">0.00%</div>
             </div>
         </div>
@@ -280,16 +280,19 @@ async function loadAnalytics() {
         document.getElementById('totalLinks').textContent = data.total_links;
         document.getElementById('totalClicks').textContent = data.total_clicks;
         document.getElementById('uniqueClickedLinks').textContent = data.unique_clicked_links;
+        // Новая логика: click_percentage = total_clicks / total_links * 100 (может превышать 100)
         document.getElementById('clickPercentage').textContent = data.click_percentage.toFixed(2) + '%';
         document.getElementById('nonClicked').textContent = data.non_clicked;
 
         // Обновляем прогресс-бар
         const percentage = data.click_percentage;
         const progressBar = document.getElementById('progressBar');
-        progressBar.style.width = percentage + '%';
+        // Ограничение ширины прогресс-бара до 100% визуально, но текст показывает реальный процент
+        progressBar.style.width = Math.min(percentage, 100) + '%';
         progressBar.textContent = percentage.toFixed(2) + '%';
 
         // CTR и Конверсия (одинаковые в данном случае)
+        // CTR и Конверсия оставляем текущими метриками; CTR показываем как соотношение кликов к ссылкам (в процентах)
         document.getElementById('ctr').textContent = data.click_percentage.toFixed(2) + '%';
         document.getElementById('conversion').textContent = data.click_percentage.toFixed(2) + '%';
 
