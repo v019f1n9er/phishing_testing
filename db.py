@@ -35,11 +35,16 @@ def initialize_users():
 
     cursor.execute("SELECT COUNT(*) FROM users")
     if cursor.fetchone()[0] == 0:
+        # Читаем учётные данные администратора из переменных окружения,
+        # если они не заданы, оставляем старые значения по умолчанию.
+        admin_user = os.environ.get('ADMIN_USER', 'admin')
+        admin_pass = os.environ.get('ADMIN_PASS', 'passwd123')
+
         cursor.execute(
             "INSERT INTO users VALUES (NULL, ?, ?, ?)",
             (
-                'admin',
-                generate_password_hash('passwd123'),
+                admin_user,
+                generate_password_hash(admin_pass),
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             )
         )

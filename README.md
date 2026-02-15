@@ -31,14 +31,60 @@ git clone https://github.com/v019f1n9er/phishing_testing.git
 ```
 
 2. Собрать Docker-образ (<ins>предварительно установив Docker</ins>):
+
+Опция 1 — интерактивный скрипт (рекомендуется на Windows):
+
 ```
-docker build -t phishing-dashboard .
+# в PowerShell
+./scripts/build.ps1
+```
+
+Опция 2 — интерактивный скрипт для Unix-подобных систем:
+
+```
+./scripts/build.sh
+```
+
+Опция 3 — напрямую через `docker build` с передачей аргументов сборки:
+
+```
+docker build \
+  --build-arg SECRET_KEY="ваш_секрет" \
+  --build-arg SESSION_COOKIE_SECURE="True" \
+  --build-arg ADMIN_USER="admin_user" \
+  --build-arg ADMIN_PASS="admin_password" \
+  -t phishing-dashboard .
 ```
 
 4. Запустить контейнер:
 ```
 docker run -d -p 8080:8080 --name phishing-dashboard-container phishing-dashboard
 ```
+
+## Обновление запущенного сервиса без потери данных
+
+Добавлены скрипты `update.ps1` (PowerShell) и `update.sh` (bash), которые:
+- подтягивают актуальный код из git (`git pull`),
+- пересобирают Docker-образ с передачей тех же build-arg значений,
+- гарантируют сохранность файла базы данных `phishing_data.db` на хосте,
+- останавливают старый контейнер и запускают новый, смонтировав `phishing_data.db` из хоста.
+
+Сценарий работы:
+- Скрипт проверяет, есть ли `phishing_data.db` в каталоге репозитория. Если нет, он пытается скопировать её из существующего контейнера.
+- После этого образ пересобирается, старый контейнер удаляется, и запускается новый контейнер с bind-mount `phishing_data.db`.
+
+Запуск обновления (Windows PowerShell):
+```
+./scripts/update.ps1
+```
+
+Запуск обновления (bash):
+```
+./scripts/update.sh
+```
+
+Важно: чтобы DB не терялась, скрипты делают bind-mount файла `phishing_data.db` из корня репозитория в контейнер по пути `/app/phishing_data.db`.
+
 > `run -d` - запуск кнтейнера в фоновом режиме
 > 
 > `-p 8080:8080`  - открытие порта 8080 на хосте на порт 8080 в контейнере
