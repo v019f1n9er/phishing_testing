@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Interactive build script for Unix-like shells (located in scripts/)
+# Интерактивный скрипт сборки для Unix-подобных оболочек (расположен в scripts/)
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR" || exit 1
 
@@ -8,7 +8,7 @@ DEFAULT_SECURE='False'
 DEFAULT_ADMIN='admin'
 DEFAULT_PASS='passwd123'
 
-# image version
+# версия образа
 IMAGE_TAG='1.0'
 
 read -p "SECRET_KEY (press Enter to use default: $DEFAULT_SECRET): " SECRET
@@ -39,7 +39,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Persist chosen values as defaults for future updates
+# Сохранить выбранные значения как значения по умолчанию для будущих обновлений
 DEFAULTS_FILE="$REPO_DIR/.build_defaults"
 cat > "$DEFAULTS_FILE" <<EOF
 SECRET_KEY=$SECRET

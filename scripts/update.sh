@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Update script for Unix-like shells (located in scripts/)
-# Pulls latest code, builds image, preserves DB and restarts container
+# Скрипт обновления для Unix-подобных оболочек (расположен в scripts/)
+# Подтягивает последний код, собирает образ, сохраняет БД и перезапускает контейнер
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR" || exit 1
@@ -12,7 +12,7 @@ DEFAULTS_FILE="$REPO_DIR/.build_defaults"
 echo "Pulling latest code from git..."
 git pull || { echo "git pull failed"; exit 1; }
 
-# Get defaults: first from .build_defaults (saved by build.sh), fall back to hardcoded defaults
+# Получаем значения по умолчанию: сначала из .build_defaults (сохранённого build.sh), иначе используем жестко заданные значения
 default_secret='phishing-dashboard-2026-super-secret-key'
 default_secure='False'
 default_admin='admin'
@@ -21,7 +21,7 @@ default_image_tag='1.0'
 
 if [ -f "$DEFAULTS_FILE" ]; then
   echo "Using saved defaults from $DEFAULTS_FILE (these came from the last build)."
-  # shellcheck disable=SC1090
+  # shellcheck: отключаем предупреждение SC1090 для source локального файла
   source "$DEFAULTS_FILE"
   default_secret=${SECRET_KEY:-$default_secret}
   default_secure=${SESSION_COOKIE_SECURE:-$default_secure}
@@ -32,7 +32,8 @@ else
   echo "No saved defaults file found; will use container envs (if present) or hardcoded defaults."
 fi
 
-# If a container exists, offer its envs as current values but still use saved defaults as defaults
+# Если контейнер существует, читаем его переменные окружения как текущие значения,
+# но значения по умолчанию берём из .build_defaults
 container_exists=false
 if [ "$(docker ps -a --format '{{.Names}}' | grep -w "$CONTAINER_NAME")" ]; then
   container_exists=true
@@ -61,7 +62,7 @@ echo
 pass=${pass:-$default_pass}
 IMAGE_TAG=${IMAGE_TAG:-$default_image_tag}
 
-# Ensure DB file is present on host
+# Убедиться, что файл БД присутствует на хосте
 HOST_DB_PATH="$REPO_DIR/phishing_data.db"
 if [ ! -f "$HOST_DB_PATH" ]; then
   if $container_exists; then
@@ -78,7 +79,7 @@ else
   echo "Host DB found at $HOST_DB_PATH — will be preserved."
 fi
 
-# Build image
+# Сборка образа
 echo "Building Docker image '$IMAGE_NAME:${IMAGE_TAG}'..."
 docker build \
   --build-arg SECRET_KEY="$secret" \
@@ -87,14 +88,14 @@ docker build \
   --build-arg ADMIN_PASS="$pass" \
   -t ${IMAGE_NAME}:${IMAGE_TAG} . || { echo "docker build failed"; exit 1; }
 
-# Stop and remove existing container
+# Остановка и удаление существующего контейнера
 if $container_exists; then
   echo "Stopping and removing existing container $CONTAINER_NAME to avoid conflicts..."
   docker stop $CONTAINER_NAME || true
   docker rm $CONTAINER_NAME || true
 fi
 
-# Run new container with host DB bind-mounted to /app
+# Запуск нового контейнера с bind-mount для DB из хоста в /app
 echo "Starting new container $CONTAINER_NAME (DB preserved at host path)..."
 docker run -d -p 8080:8080 --name $CONTAINER_NAME -v "$HOST_DB_PATH:/app/phishing_data.db:rw" ${IMAGE_NAME}:${IMAGE_TAG} || { echo "docker run failed"; exit 1; }
 
