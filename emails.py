@@ -94,6 +94,80 @@ def register_emails_routes(app):
             "errors": errors
         })
 
+    @app.route('/api/emails/upload', methods=['POST'])
+    @login_required
+    def api_emails_upload():
+        # Обрабатываем загрузку xlsx/xls файлов и извлекаем email адреса
+        if 'file' not in request.files:
+            return jsonify({"error": "Файл не загружен"}), 400
+
+        file = request.files['file']
+        if not file.filename:
+            return jsonify({"error": "Файл не выбран"}), 400
+
+        filename = file.filename.lower()
+        if not (filename.endswith('.xlsx') or filename.endswith('.xls')):
+            return jsonify({"error": "Поддерживаются только файлы .xlsx и .xls"}), 400
+
+        try:
+            df = pd.read_excel(file, header=None)
+        except Exception as e:
+            return jsonify({"error": f"Ошибка при чтении файла: {e}"}), 400
+
+        # Собираем значения из всех ячеек
+        values = []
+        for val in df.to_numpy().flatten():
+            if pd.isna(val):
+                continue
+            values.append(str(val).strip())
+
+        if not values:
+            return jsonify({"error": "Файл не содержит данных"}), 400
+
+        # Разбираем значения на отдельные email (возможно в одной ячейке несколько через запятую/точку с запятой/пробел)
+        email_list = []
+        for cell in values:
+            for part in re.split(r"[\s,;]+", cell):
+                if part:
+                    email_list.append(part)
+
+        email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        added, skipped, errors = 0, 0, []
+
+        for email in email_list:
+            if not email_pattern.match(email):
+                skipped += 1
+                errors.append(f"Неверный формат: {email}")
+                continue
+
+            token = hashlib.md5(
+                f"{email}_{secrets.token_hex(8)}_{datetime.now().timestamp()}".encode()
+            ).hexdigest()[:16]
+
+            try:
+                cursor.execute(
+                    "INSERT INTO emails (email, token, created_at) VALUES (?, ?, ?)",
+                    (email.lower(), token, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                )
+                added += 1
+            except sqlite3.IntegrityError:
+                skipped += 1
+                errors.append(f"Дубликат: {email}")
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "ok",
+            "added": added,
+            "skipped": skipped,
+            "errors": errors
+        })
+
     @app.route('/api/emails/delete', methods=['POST'])
     @login_required
     def api_emails_delete():

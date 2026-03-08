@@ -465,7 +465,13 @@ async function uploadFile(file) {
             body: formData
         });
 
-        const data = await res.json();
+        let data;
+        try {
+            data = await res.json();
+        } catch (err) {
+            const text = await res.text().catch(() => '');
+            throw new Error(text || err.message || 'Не удалось разобрать ответ сервера');
+        }
 
         if (res.ok) {
             let message = `<div class="alert alert-success">
