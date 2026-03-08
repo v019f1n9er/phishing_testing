@@ -9,7 +9,7 @@ DEFAULT_ADMIN='admin'
 DEFAULT_PASS='passwd123'
 
 # версия образа
-IMAGE_TAG='1.0'
+IMAGE_TAG='1.0.1'
 
 read -p "SECRET_KEY (press Enter to use default: $DEFAULT_SECRET): " SECRET
 SECRET=${SECRET:-$DEFAULT_SECRET}

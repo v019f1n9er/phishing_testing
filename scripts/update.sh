@@ -17,7 +17,7 @@ default_secret='phishing-dashboard-2026-super-secret-key'
 default_secure='False'
 default_admin='admin'
 default_pass='passwd123'
-default_image_tag='1.0'
+default_image_tag='1.0.1'
 
 if [ -f "$DEFAULTS_FILE" ]; then
   echo "Using saved defaults from $DEFAULTS_FILE (these came from the last build)."
