@@ -12,16 +12,17 @@
 
     <style>
         body {
-            background-color: #f8f9fa;
-            transition: all 0.5s ease;
+            background-color: #e8f2fa;
+            color: #32475d;
+            transition: background-color 0.4s ease, color 0.4s ease;
             padding-bottom: 2rem;
         }
 
         .content-wrapper {
-            width: 80%;
-            max-width: 80%;
+            width: 82%;
+            max-width: 1100px;
             margin: 0 auto;
-            transition: all 0.5s ease;
+            transition: all 0.4s ease;
             padding-bottom: 2rem;
         }
 
@@ -29,127 +30,402 @@
             .content-wrapper {
                 width: 100%;
                 max-width: 100%;
-                padding: 0 10px;
+                padding: 0 1rem;
             }
         }
 
-        .card, .d-flex {
+        .card, .table-wrapper, .form-section, .notification-item, .step, .schedule-preview {
+            border-radius: 18px;
+            border: 1px solid rgba(81, 110, 138, 0.18);
+            background: #f5f9fd;
+            box-shadow: 0 14px 30px rgba(73, 102, 134, 0.08);
+            transition: all 0.35s ease;
+        }
+
+        .card-body,
+        .form-section,
+        .schedule-preview,
+        .notification-item {
+            background: rgba(243, 249, 255, 0.95);
+        }
+
+        .card-header {
+            background: #eef5fb;
+            border-bottom: 1px solid rgba(81, 110, 138, 0.18);
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background: #ecf5fb;
+            border: none;
+            box-shadow: none;
+        }
+
+        table {
+            width: 100%;
+            table-layout: auto;
             transition: all 0.4s ease;
         }
 
-        .analytics-card {
-            border-left: 4px solid #28a745;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        th, td {
+            font-size: 14px;
+            padding: 0.75rem;
+            vertical-align: middle;
+            transition: background-color 0.3s ease;
         }
 
-        .analytics-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #28a745;
-            margin: 0.5rem 0;
+        thead th {
+            background: #d9e7f2;
+            color: #3d5f7f;
+            border-bottom: 1px solid rgba(81, 110, 138, 0.18);
         }
 
-        .analytics-label {
-            color: #6c757d;
-            font-size: 0.95rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        table.table-striped tbody tr:nth-of-type(odd) {
+            background: rgba(230, 243, 252, 0.7);
         }
 
-        .progress-container {
-            margin-top: 1.5rem;
+        #rowCount {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #4f6b86;
         }
 
-        .progress {
-            height: 25px;
-            background-color: #e9ecef;
+        .controls select,
+        .controls button {
+            transition: all 0.3s ease;
         }
 
-        .progress-bar {
-            background-color: #28a745;
-            font-weight: bold;
+        .user-logout,
+        .password-input-wrapper,
+        .service-buttons {
             display: flex;
+            gap: 0.75rem;
             align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.9rem;
-        }
-
-        .metric-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .metric-box {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #28a745;
-        }
-
-        .metric-box .label {
-            color: #6c757d;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .metric-box .value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #28a745;
-        }
-
-        .campaign-stats {
-            margin-top: 2rem;
-        }
-
-        .stat-item {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid #0d6efd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-label {
-            color: #495057;
-        }
-
-        .stat-value {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #0d6efd;
         }
 
         .user-logout {
             position: absolute;
             top: 1rem;
             right: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+            z-index: 10;
         }
 
-        .loading {
+        .password-toggle input[type="checkbox"] {
+            margin: 0;
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .protocol-badge,
+        .status-badge,
+        .btn,
+        .form-control,
+        .form-select,
+        textarea,
+        .upload-area {
+            border-radius: 14px;
+        }
+
+        .form-control,
+        .form-select,
+        textarea {
+            border-color: rgba(81, 110, 138, 0.18);
+            background: #eef5fb;
+            color: #32475d;
+        }
+
+        textarea {
+            font-family: monospace;
+        }
+
+        .form-section {
+            background: #eef5fb;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area {
+            min-height: 150px;
+            border: 1px dashed rgba(81, 110, 138, 0.3);
+            background: rgba(227, 240, 250, 0.55);
+            padding: 1rem;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: rgba(81, 110, 138, 0.6);
+            background: rgba(226, 240, 251, 0.8);
+        }
+
+        .nav-tabs-custom {
+            border-bottom: 1px solid rgba(81, 110, 138, 0.25);
+            margin-bottom: 1.25rem;
+        }
+
+        .nav-tabs-custom .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            background: none;
+            color: #4e6f8a;
+            font-weight: 500;
+            padding: 0.8rem 1rem;
+            margin-right: 0.25rem;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .nav-tabs-custom .nav-link:hover {
+            color: #2f4e6c;
+            background-color: rgba(226, 240, 251, 0.85);
+            border-bottom-color: rgba(81, 110, 138, 0.25);
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            color: #2f4e6c;
+            background-color: #e7f3fb;
+            border-bottom-color: #6d93b5;
+            font-weight: 600;
+        }
+
+        .nav-tabs-custom .nav-link.active:hover {
+            background-color: #e7f3fb;
+        }
+
+        .metric-row {
             display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-row .metric-box {
+            flex: 1 1 200px;
+            max-width: calc(25% - 0.75rem);
+        }
+
+        @media (max-width: 768px) {
+            .metric-row .metric-box {
+                max-width: calc(50% - 0.5rem);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .metric-row .metric-box {
+                max-width: 100%;
+            }
+        }
+
+        .metric-box,
+        .analytics-card,
+        .stat-item,
+        .step,
+        .notification-item {
+            border-radius: 16px;
+        }
+
+        .metric-box {
+            background: #eaf2fa;
+            border-left: 4px solid #7a9fc3;
+            padding: 1rem;
+            min-height: 120px;
+        }
+
+        .metric-box .label {
+            display: block;
+            color: #5c7b95;
+            font-size: 13px;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .metric-box .value {
+            color: #2f4f72;
+            font-size: 1.9rem;
+            font-weight: 700;
+        }
+
+        .analytics-card {
+            border-left: 4px solid #7a9fc3;
+            background: linear-gradient(135deg, #e7f3fb 0%, #ffffff 100%);
+        }
+
+        .stat-item {
+            border-left: 4px solid #81a4c3;
+            background: #eef6fb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .stat-label {
+            color: #4a6c8b;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            color: #2f4f72;
+            font-weight: 700;
+        }
+
+        .step {
+            min-width: 150px;
+            padding: 1rem;
+            background: #d7e6f3;
+            transition: all 0.3s ease;
+        }
+
+        .step.active,
+        .step.completed {
+            background: #aec7dc;
+            color: #2e4d69;
+        }
+
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-trigger {
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            height: 50vh;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #5f7ea3;
+            color: white;
+            font-size: 12px;
+            border: none;
+            cursor: help;
         }
 
-        .spinner-border {
-            color: #28a745;
+        .tooltip-trigger:hover {
+            background-color: #4f6c8f;
+            transform: scale(1.05);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            top: 50%;
+            left: calc(100% + 0.5rem);
+            transform: translateY(-50%);
+            background-color: #2d4f72;
+            color: #f8f0e4;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            max-width: 260px;
+            word-wrap: break-word;
+            box-shadow: 0 12px 24px rgba(45, 79, 114, 0.15);
+        }
+
+        .tooltip-content::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -6px;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: #2d4f72;
+        }
+
+        .tooltip-content.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(-50%) translateX(0) !important;
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                display: none;
+            }
+        }
+
+        .progress-container {
+            margin-top: 0.75rem;
+        }
+
+        .btn-primary {
+            background-color: #5d8abf;
+            border-color: #5d8abf;
+            color: #fff;
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #5176a6;
+            border-color: #5176a6;
+        }
+
+        .btn-success {
+            background-color: #4f7eab;
+            border-color: #4f7eab;
+            color: #fff;
+        }
+
+        .btn-success:hover,
+        .btn-success:focus {
+            background-color: #406c92;
+            border-color: #406c92;
+        }
+
+        .btn-outline-secondary {
+            color: #4e6f8a;
+            border-color: #a9c0d8;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #e6f0f8;
+            color: #2f4f72;
+        }
+
+        .btn-danger {
+            background-color: #7d5f62;
+            border-color: #7d5f62;
+            color: #fff;
+        }
+
+        .btn-danger:hover,
+        .btn-danger:focus {
+            background-color: #6d4f55;
+            border-color: #6d4f55;
+        }
+
+        .text-primary {
+            color: #3f5f7c !important;
+        }
+
+        .text-success {
+            color: #4f7a86 !important;
+        }
+
+        .text-warning {
+            color: #5a7c95 !important;
+        }
+
+        .text-danger {
+            color: #7f4d57 !important;
+        }
+
+        .alert-custom {
+            margin-top: 1rem;
+            background: #e6f1fa;
+            border: 1px solid rgba(81, 110, 138, 0.18);
         }
     </style>
+
+
 </head>
 <body>
 
@@ -162,11 +438,17 @@
                 <h3 class="card-title text-success mb-2">
                     Аналитика кликов
                 </h3>
-                <div class="d-flex gap-2 mb-2">
-                    <a href="/" class="btn btn-outline-danger btn-sm">Dashboard</a>
-                    <a href="/emails" class="btn btn-outline-primary btn-sm">Email адреса</a>
-                    <a href="/analytics" class="btn btn-success btn-sm">Аналитика</a>
-                </div>
+
+                <!-- Вкладки навигации -->
+                <nav class="nav-tabs-custom">
+                    <div class="d-flex gap-0 flex-wrap">
+                        <a href="/" class="nav-link dashboard">Dashboard</a>
+                        <a href="/emails" class="nav-link emails">Email адреса</a>
+                        <a href="/mail-accounts" class="nav-link mail-accounts">Почтовые учетные записи</a>
+                        <a href="/mail-sender" class="nav-link mail-sender">Отправка писем</a>
+                        <a href="/analytics" class="nav-link analytics active">Аналитика</a>
+                    </div>
+                </nav>
             </div>
 
             <!-- Пользователь и кнопка Выйти -->
@@ -211,34 +493,30 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <h6 class="card-title text-muted">Процентное соотношение кликов</h6>
-                <div class="progress-container">
+                <div class="progress-container mb-4">
                     <div class="progress">
                         <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                             0%
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Export Report -->
-        <div class="d-flex justify-content-between align-items-center mb-3 controls flex-wrap gap-2">
-            <div>
-                <span class="text-muted">Выгрузить отчет аналитики:</span>
-            </div>
-
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <select id="analyticsExportFormat" class="form-select form-select-sm" style="width: auto;">
-                    <option value="">Формат отчёта</option>
-                    <option value="analytics_html">HTML (веб-страница)</option>
-                    <option value="analytics_excel">Excel (.xlsx)</option>
-                    <option value="analytics_txt">TXT (.txt)</option>
-                    <option value="analytics_json">JSON (.json)</option>
-                </select>
-
-                <button class="btn btn-success btn-sm" onclick="downloadAnalyticsReport()">
-                    Скачать
-                </button>
+                <div class="d-flex justify-content-between align-items-center mb-0 controls flex-wrap gap-2">
+                    <div>
+                        <span class="text-muted">Выгрузить отчет аналитики:</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <select id="analyticsExportFormat" class="form-select form-select-sm" style="width: auto;">
+                            <option value="">Формат отчёта</option>
+                            <option value="analytics_html">HTML (веб-страница)</option>
+                            <option value="analytics_excel">Excel (.xlsx)</option>
+                            <option value="analytics_txt">TXT (.txt)</option>
+                            <option value="analytics_json">JSON (.json)</option>
+                        </select>
+                        <button class="btn btn-success btn-sm" onclick="downloadAnalyticsReport()">
+                            Скачать
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 

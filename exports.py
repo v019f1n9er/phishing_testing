@@ -319,7 +319,7 @@ def register_export_routes(app):
 </head>
 <body>
     <div class="container">
-        <h1>📊 Отчет аналитики кликов</h1>
+        <h1>Отчет аналитики кликов</h1>
         <div class="timestamp">Дата создания: {data['timestamp']}</div>
         
         <!-- Metric Cards -->

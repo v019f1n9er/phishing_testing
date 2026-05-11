@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Отправка Писем - Phishing Dashboard</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+    <!-- Chart.js для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+    <style>
+        body {
+            background-color: #e8f2fa;
+            color: #32475d;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            padding-bottom: 2rem;
+        }
+
+        .content-wrapper {
+            width: 82%;
+            max-width: 1100px;
+            margin: 0 auto;
+            transition: all 0.4s ease;
+            padding-bottom: 2rem;
+        }
+
+        @media (max-width: 1000px) {
+            .content-wrapper {
+                width: 100%;
+                max-width: 100%;
+                padding: 0 1rem;
+            }
+        }
+
+        .card, .table-wrapper, .form-section, .notification-item, .step, .schedule-preview {
+            border-radius: 18px;
+            border: 1px solid rgba(81, 110, 138, 0.18);
+            background: #f5f9fd;
+            box-shadow: 0 14px 30px rgba(73, 102, 134, 0.08);
+            transition: all 0.35s ease;
+        }
+
+        .card-body,
+        .form-section,
+        .schedule-preview,
+        .notification-item {
+            background: rgba(243, 249, 255, 0.95);
+        }
+
+        .card-header {
+            background: #eef5fb;
+            border-bottom: 1px solid rgba(81, 110, 138, 0.18);
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background: #ecf5fb;
+            border: none;
+            box-shadow: none;
+        }
+
+        table {
+            width: 100%;
+            table-layout: auto;
+            transition: all 0.4s ease;
+        }
+
+        th, td {
+            font-size: 14px;
+            padding: 0.75rem;
+            vertical-align: middle;
+            transition: background-color 0.3s ease;
+        }
+
+        thead th {
+            background: #d9e7f2;
+            color: #3d5f7f;
+            border-bottom: 1px solid rgba(81, 110, 138, 0.18);
+        }
+
+        table.table-striped tbody tr:nth-of-type(odd) {
+            background: rgba(230, 243, 252, 0.7);
+        }
+
+        #rowCount {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #4f6b86;
+        }
+
+        .controls select,
+        .controls button {
+            transition: all 0.3s ease;
+        }
+
+        .user-logout {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+            z-index: 10;
+        }
+
+        .user-logout,
+        .password-input-wrapper,
+        .service-buttons {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .user-logout {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+            z-index: 10;
+        }
+
+        .password-toggle input[type="checkbox"] {
+            margin: 0;
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .protocol-badge,
+        .status-badge,
+        .btn,
+        .form-control,
+        .form-select,
+        textarea,
+        .upload-area {
+            border-radius: 14px;
+        }
+
+        .form-control,
+        .form-select,
+        textarea {
+            border-color: rgba(81, 110, 138, 0.18);
+            background: #eef5fb;
+            color: #32475d;
+        }
+
+        textarea {
+            font-family: monospace;
+        }
+
+        .form-section {
+            background: #eef5fb;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area {
+            min-height: 150px;
+            border: 1px dashed rgba(81, 110, 138, 0.3);
+            background: rgba(227, 240, 250, 0.55);
+            padding: 1rem;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: rgba(81, 110, 138, 0.6);
+            background: rgba(226, 240, 251, 0.8);
+        }
+
+        .nav-tabs-custom {
+            border-bottom: 1px solid rgba(81, 110, 138, 0.25);
+            margin-bottom: 1.25rem;
+        }
+
+        .nav-tabs-custom .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            background: none;
+            color: #4e6f8a;
+            font-weight: 500;
+            padding: 0.8rem 1rem;
+            margin-right: 0.25rem;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .nav-tabs-custom .nav-link:hover {
+            color: #2f4e6c;
+            background-color: rgba(226, 240, 251, 0.85);
+            border-bottom-color: rgba(81, 110, 138, 0.25);
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            color: #2f4e6c;
+            background-color: #e7f3fb;
+            border-bottom-color: #6d93b5;
+            font-weight: 600;
+        }
+
+        .nav-tabs-custom .nav-link.active:hover {
+            background-color: #e7f3fb;
+        }
+
+        .metric-box,
+        .analytics-card,
+        .stat-item,
+        .step,
+        .notification-item {
+            border-radius: 16px;
+        }
+
+        .metric-box {
+            background: #eaf2fa;
+            border-left: 4px solid #7a9fc3;
+            padding: 1rem;
+            min-height: 120px;
+        }
+
+        .metric-box .label {
+            display: block;
+            color: #5c7b95;
+            font-size: 13px;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .metric-box .value {
+            color: #2f4f72;
+            font-size: 1.9rem;
+            font-weight: 700;
+        }
+
+        .analytics-card {
+            border-left: 4px solid #7a9fc3;
+            background: linear-gradient(135deg, #e7f3fb 0%, #ffffff 100%);
+        }
+
+        .stat-item {
+            border-left: 4px solid #81a4c3;
+            background: #eef6fb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .stat-label {
+            color: #4a6c8b;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            color: #2f4f72;
+            font-weight: 700;
+        }
+
+        .step {
+            min-width: 150px;
+            padding: 1rem;
+            background: #d7e6f3;
+            transition: all 0.3s ease;
+        }
+
+        .step.active,
+        .step.completed {
+            background: #aec7dc;
+            color: #2e4d69;
+        }
+
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #5f7ea3;
+            color: white;
+            font-size: 12px;
+            border: none;
+            cursor: help;
+        }
+
+        .tooltip-trigger:hover {
+            background-color: #4f6c8f;
+            transform: scale(1.05);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            top: 50%;
+            left: calc(100% + 0.5rem);
+            transform: translateY(-50%);
+            background-color: #2d4f72;
+            color: #f8f0e4;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            max-width: 260px;
+            word-wrap: break-word;
+            box-shadow: 0 12px 24px rgba(45, 79, 114, 0.15);
+        }
+
+        .tooltip-content::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -6px;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: #2d4f72;
+        }
+
+        .tooltip-content.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(-50%) translateX(0) !important;
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                display: none;
+            }
+        }
+
+        .progress-container {
+            margin-top: 0.75rem;
+        }
+
+        .btn-primary {
+            background-color: #5d8abf;
+            border-color: #5d8abf;
+            color: #fff;
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #5176a6;
+            border-color: #5176a6;
+        }
+
+        .btn-success {
+            background-color: #4f7eab;
+            border-color: #4f7eab;
+            color: #fff;
+        }
+
+        .btn-success:hover,
+        .btn-success:focus {
+            background-color: #406c92;
+            border-color: #406c92;
+        }
+
+        .btn-outline-secondary {
+            color: #4e6f8a;
+            border-color: #a9c0d8;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #e6f0f8;
+            color: #2f4f72;
+        }
+
+        .btn-danger {
+            background-color: #7d5f62;
+            border-color: #7d5f62;
+            color: #fff;
+        }
+
+        .btn-danger:hover,
+        .btn-danger:focus {
+            background-color: #6d4f55;
+            border-color: #6d4f55;
+        }
+
+        .text-primary {
+            color: #3f5f7c !important;
+        }
+
+        .text-success {
+            color: #4f7a86 !important;
+        }
+
+        .text-warning {
+            color: #5a7c95 !important;
+        }
+
+        .text-danger {
+            color: #7f4d57 !important;
+        }
+
+        .alert-custom {
+            margin-top: 1rem;
+            background: #e6f1fa;
+            border: 1px solid rgba(81, 110, 138, 0.18);
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="container-fluid mt-4 content-wrapper">
+
+    <!-- Header -->
+    <div class="card shadow-sm mb-4 position-relative">
+        <div class="card-body">
+            <div>
+                <h3 class="card-title text-info mb-2">
+                    Отправка Писем
+                </h3>
+
+                <!-- Вкладки навигации -->
+                <nav class="nav-tabs-custom">
+                    <div class="d-flex gap-0 flex-wrap">
+                        <a href="/" class="nav-link dashboard">Dashboard</a>
+                        <a href="/emails" class="nav-link emails">Email адреса</a>
+                        <a href="/mail-accounts" class="nav-link mail-accounts">Почтовые учетные записи</a>
+                        <a href="/mail-sender" class="nav-link mail-sender active">Отправка писем</a>
+                        <a href="/analytics" class="nav-link analytics">Аналитика</a>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Пользователь и кнопка Выйти -->
+            <div class="user-logout">
+                <div class="text-muted small mb-0">{{ session.username }}</div>
+                <a href="/logout" class="btn btn-outline-secondary btn-sm">Выйти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator" id="stepIndicator">
+        <div class="step active" id="step1">
+            <span class="step-number">1</span>
+            <span class="step-title">Создать кампанию</span>
+        </div>
+        <div class="step" id="step2">
+            <span class="step-number">2</span>
+            <span class="step-title">Спланировать</span>
+        </div>
+        <div class="step" id="step3">
+            <span class="step-number">3</span>
+            <span class="step-title">Подтвердить</span>
+        </div>
+        <div class="step" id="step4">
+            <span class="step-number">4</span>
+            <span class="step-title">Запустить</span>
+        </div>
+    </div>
+
+    <!-- Step 1: Create Campaign -->
+    <div class="form-section" id="step1-content">
+        <h5 class="card-title mb-3">Шаг 1: Создать кампанию</h5>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="campaignName" class="form-label">Название кампании</label>
+                <input type="text" class="form-control" id="campaignName" placeholder="Моя кампания">
+            </div>
+            <div class="col-md-6">
+                <label for="fromAccount" class="form-label">От какой учетной записи отправлять</label>
+                <select class="form-select" id="fromAccount">
+                    <option value="">Выберите учетную запись...</option>
+                </select>
+                <small class="form-text text-muted">Еще нет учетных записей? <a href="/mail-accounts">Добавьте их здесь</a></small>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="emailSubject" class="form-label">Тема письма</label>
+            <input type="text" class="form-control" id="emailSubject" placeholder="Срочное: Действия требуются">
+        </div>
+
+        <div class="mb-3">
+            <label for="emailBody" class="form-label">Текст письма</label>
+            <textarea class="form-control" id="emailBody" rows="6" placeholder="Введите текст письма..."></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="emailHtml" class="form-label">HTML версия письма (опционально)</label>
+            <textarea class="form-control" id="emailHtml" rows="4" placeholder="&lt;html&gt;...&lt;/html&gt;"></textarea>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-5">
+                <label for="templateName" class="form-label">Название шаблона</label>
+                <input type="text" class="form-control" id="templateName" placeholder="Шаблон 1">
+            </div>
+            <div class="col-md-7">
+                <label for="templateList" class="form-label">Сохраненные шаблоны</label>
+                <div class="input-group">
+                    <select class="form-select" id="templateList">
+                        <option value="">Выберите шаблон...</option>
+                    </select>
+                    <button type="button" class="btn btn-outline-secondary" id="loadTemplateBtn" onclick="loadTemplate()">Загрузить</button>
+                    <button type="button" class="btn btn-outline-danger" id="deleteTemplateBtn" onclick="deleteTemplate()">Удалить</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3 d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary" id="saveTemplateBtn" onclick="saveTemplate()">Сохранить шаблон</button>
+            <button type="button" class="btn btn-outline-secondary" id="loadRecipientsBtn" onclick="loadRecipients()">Загрузить адреса из Email адресов</button>
+        </div>
+        <div class="mb-3">
+            <label for="recipients" class="form-label">Получатели (один email на строку)</label>
+            <textarea class="form-control" id="recipients" rows="8" placeholder="user1@example.com&#10;user2@example.com&#10;user3@example.com"></textarea>
+            <small class="form-text text-muted">
+                Введите email адреса, каждый с новой строки. Всего: <span id="recipientCount">0</span> адресов
+            </small>
+        </div>
+
+        <button class="btn btn-primary" onclick="createCampaign()">
+            Создать кампанию
+        </button>
+        <div id="createCampaignResult" class="alert-custom mt-2"></div>
+    </div>
+
+    <!-- Step 2: Schedule Emails -->
+    <div class="form-section" id="step2-content" style="display:none;">
+        <h5 class="card-title mb-3">Шаг 2: Спланировать отправку</h5>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="startDate" class="form-label">Начало отправки</label>
+                <input type="datetime-local" class="form-control" id="startDate">
+            </div>
+            <div class="col-md-6">
+                <label for="endDate" class="form-label">Конец отправки</label>
+                <input type="datetime-local" class="form-control" id="endDate">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="randomSchedule" checked>
+                <label class="form-check-label" for="randomSchedule">
+                    🎲 Случайные даты (распределить письма по случайным датам в диапазоне)
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="requireConfirmation">
+                <label class="form-check-label" for="requireConfirmation">
+                    Требовать подтверждение перед отправкой
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <h6 class="mb-2">Превью расписания (первые 10 писем):</h6>
+            <div class="schedule-preview" id="schedulePreview">
+                <p class="text-muted">Расписание появится здесь после планирования...</p>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="scheduleCampaignEmails()">
+            ⏰ Спланировать отправку
+        </button>
+        <div id="scheduleResult" class="alert-custom mt-2"></div>
+    </div>
+
+    <!-- Step 3: Confirm Campaign -->
+    <div class="form-section" id="step3-content" style="display:none;">
+        <h5 class="card-title mb-3">Шаг 3: Подтвердить кампанию</h5>
+
+        <div class="alert alert-warning" role="alert">
+            <strong>⚠️ Внимание!</strong> Вы собираетесь запустить кампанию с отправкой писем.
+            Перед началом отправки просмотрите расписание и убедитесь, что все параметры верны.
+        </div>
+
+        <div id="campaignSummary" class="mb-3">
+            <!-- Будет заполнено JavaScript -->
+        </div>
+
+        <button class="btn btn-success" onclick="confirmAndStartCampaign()">
+            Подтвердить и запустить
+        </button>
+        <button class="btn btn-outline-secondary" onclick="goBackToStep2()">
+            ↶ Вернуться
+        </button>
+        <div id="confirmResult" class="alert-custom mt-2"></div>
+    </div>
+
+    <!-- Step 4: Monitor Campaign -->
+    <div class="form-section" id="step4-content" style="display:none;">
+        <h5 class="card-title mb-3">Шаг 4: Мониторинг кампании</h5>
+
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="h6 text-muted">Всего</div>
+                        <div id="totalCount" class="h4">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="h6 text-muted">Отправлено</div>
+                        <div id="sentCount" class="h4 text-success">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="h6 text-muted">Ошибки</div>
+                        <div id="failedCount" class="h4 text-danger">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="h6 text-muted">Статус</div>
+                        <div id="campaignStatus" class="h6"><span class="badge bg-secondary">Ожидание</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <canvas id="statsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Последние уведомления</h6>
+            </div>
+            <div class="card-body" id="notificationsList">
+                <p class="text-muted">Уведомления появятся здесь...</p>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button class="btn btn-info" onclick="refreshCampaignStatus()">
+                Обновить статус
+            </button>
+            <button class="btn btn-outline-secondary" onclick="exportNotifications()">
+                💾 Экспортировать уведомления
+            </button>
+        </div>
+    </div>
+
+    <!-- Existing Campaigns -->
+    <div class="form-section mt-4">
+        <h5 class="card-title mb-3">Существующие кампании</h5>
+
+        <div class="table-responsive">
+            <table class="table table-striped" id="campaignsTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>От</th>
+                        <th>Получателей</th>
+                        <th>Отправлено</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="campaignsTableBody">
+                    <tr><td colspan="7" class="text-center text-muted">Кампании загружаются...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+let currentCampaignId = null;
+let statsChart = null;
+
+// Загрузить список учетных записей
+function loadMailAccounts() {
+    fetch('/api/mail-accounts/list')
+        .then(r => r.json())
+        .then(data => {
+            const select = document.getElementById('fromAccount');
+            select.innerHTML = '<option value="">Выберите учетную запись...</option>';
+            
+            if (data.accounts) {
+                data.accounts.forEach(acc => {
+                    const option = document.createElement('option');
+                    option.value = acc.id;
+                    option.textContent = `${acc.email} (${acc.protocol})`;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+// Считать количество получателей
+document.getElementById('recipients').addEventListener('input', function() {
+    const count = this.value.split('\n').filter(line => line.trim() && line.includes('@')).length;
+    document.getElementById('recipientCount').textContent = count;
+});
+
+// Создать кампанию
+function createCampaign() {
+    const name = document.getElementById('campaignName').value.trim();
+    const fromAccountId = document.getElementById('fromAccount').value;
+    const subject = document.getElementById('emailSubject').value.trim();
+    const body = document.getElementById('emailBody').value.trim();
+    const html = document.getElementById('emailHtml').value.trim();
+    const recipients = document.getElementById('recipients').value;
+
+    if (!name || !fromAccountId || !subject || !body || !recipients) {
+        showResult('createCampaignResult', 'Пожалуйста, заполните все обязательные поля', 'danger');
+        return;
+    }
+
+    showResult('createCampaignResult', '<div class="spinner-border spinner-border-sm" role="status"></div> Создание кампании...', 'info');
+
+    fetch('/api/mail-sender/create-campaign', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            name, from_account_id: parseInt(fromAccountId), subject, body, html, recipients
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            currentCampaignId = data.campaign_id;
+            showResult('createCampaignResult', `✓ ${data.message}`, 'success');
+            
+            // Переходим на шаг 2
+            setTimeout(() => goToStep(2), 1000);
+        } else {
+            showResult('createCampaignResult', `✗ ${data.error}`, 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showResult('createCampaignResult', '✗ Ошибка при создании кампании', 'danger');
+    });
+}
+
+// Спланировать отправку
+function scheduleCampaignEmails() {
+    if (!currentCampaignId) {
+        showResult('scheduleResult', '✗ Сначала создайте кампанию', 'danger');
+        return;
+    }
+
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (!startDate || !endDate) {
+        showResult('scheduleResult', '✗ Установите начальную и конечную дату', 'danger');
+        return;
+    }
+
+    showResult('scheduleResult', '<div class="spinner-border spinner-border-sm" role="status"></div> Планирование...', 'info');
+
+    fetch('/api/mail-sender/schedule-emails', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            campaign_id: currentCampaignId,
+            start_date: new Date(startDate).toISOString(),
+            end_date: new Date(endDate).toISOString(),
+            random_schedule: document.getElementById('randomSchedule').checked,
+            require_confirmation: document.getElementById('requireConfirmation').checked
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showResult('scheduleResult', '✓ Расписание спланировано', 'success');
+            loadSchedulePreview();
+            
+            setTimeout(() => goToStep(document.getElementById('requireConfirmation').checked ? 3 : 4), 1000);
+        } else {
+            showResult('scheduleResult', `✗ ${data.error}`, 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showResult('scheduleResult', '✗ Ошибка при планировании', 'danger');
+    });
+}
+
+// Загрузить превью расписания
+function loadSchedulePreview() {
+    if (!currentCampaignId) return;
+
+    fetch(`/api/mail-sender/campaign-schedule/${currentCampaignId}?limit=10`)
+        .then(r => r.json())
+        .then(data => {
+            const preview = document.getElementById('schedulePreview');
+            preview.innerHTML = '';
+
+            if (data.schedule && data.schedule.length > 0) {
+                data.schedule.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'notification-item';
+                    div.innerHTML = `
+                        <strong>${item.recipient_email}</strong><br>
+                        <small>Запланировано: ${new Date(item.scheduled_time).toLocaleString('ru-RU')}</small>
+                    `;
+                    preview.appendChild(div);
+                });
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+// Подтвердить и запустить кампанию
+function confirmAndStartCampaign() {
+    if (!currentCampaignId) return;
+
+    showResult('confirmResult', '<div class="spinner-border spinner-border-sm" role="status"></div> Запуск кампании...', 'info');
+
+    fetch(`/api/mail-sender/start-campaign/${currentCampaignId}`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCsrfToken()}
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showResult('confirmResult', '✓ Кампания запущена! Мониторинг началась.', 'success');
+            goToStep(4);
+            startMonitoring();
+        } else {
+            showResult('confirmResult', `✗ ${data.error}`, 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showResult('confirmResult', '✗ Ошибка при запуске', 'danger');
+    });
+}
+
+// Мониторинг кампании
+function startMonitoring() {
+    refreshCampaignStatus();
+    // Обновлять каждые 5 секунд
+    setInterval(refreshCampaignStatus, 5000);
+}
+
+// Обновить статус кампании
+function refreshCampaignStatus() {
+    if (!currentCampaignId) return;
+
+    fetch(`/api/mail-sender/campaign-status/${currentCampaignId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.campaign) {
+                const camp = data.campaign;
+                document.getElementById('totalCount').textContent = camp.stats.total;
+                document.getElementById('sentCount').textContent = camp.stats.sent;
+                document.getElementById('failedCount').textContent = camp.stats.failed;
+                document.getElementById('campaignStatus').innerHTML = 
+                    `<span class="status-badge status-${camp.status}">${camp.status.toUpperCase()}</span>`;
+            }
+        })
+        .catch(err => console.error(err));
+
+    loadNotifications();
+    loadStats();
+}
+
+// Загрузить уведомления
+function loadNotifications() {
+    if (!currentCampaignId) return;
+
+    fetch(`/api/mail-notifications/list?campaign_id=${currentCampaignId}&limit=10`)
+        .then(r => r.json())
+        .then(data => {
+            const list = document.getElementById('notificationsList');
+            list.innerHTML = '';
+
+            if (data.notifications && data.notifications.length > 0) {
+                data.notifications.forEach(notif => {
+                    const div = document.createElement('div');
+                    div.className = `notification-item ${notif.status}`;
+                    const emoji = {'sent': '✅', 'failed': '❌', 'pending': '⏳'}[notif.status] || '❓';
+                    div.innerHTML = `
+                        <strong>${emoji} ${notif.recipient_email}</strong><br>
+                        <small>
+                            Запланировано: ${new Date(notif.scheduled_time).toLocaleString('ru-RU')}<br>
+                            Отправлено: ${notif.sent_time ? new Date(notif.sent_time).toLocaleString('ru-RU') : 'Ожидание'}
+                        </small>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+// Загрузить статистику
+function loadStats() {
+    if (!currentCampaignId) return;
+
+    fetch(`/api/mail-notifications/stats/${currentCampaignId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.stats && statsChart) {
+                const labels = data.stats.map(s => s.hour);
+                const sentData = data.stats.map(s => s.sent);
+                const failedData = data.stats.map(s => s.failed);
+
+                statsChart.data.labels = labels;
+                statsChart.data.datasets[0].data = sentData;
+                statsChart.data.datasets[1].data = failedData;
+                statsChart.update();
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+// Экспортировать уведомления
+function exportNotifications() {
+    if (!currentCampaignId) return;
+
+    fetch(`/api/mail-notifications/export/${currentCampaignId}?format=csv`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                downloadFile(data.data, `campaign_${currentCampaignId}.csv`, 'text/csv');
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+// ===== Функции для работы с шаблонами и получателями =====
+
+// Загрузить список получателей из раздела Email адреса
+function loadRecipients() {
+    const btn = document.getElementById('loadRecipientsBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Загрузка...';
+
+    fetch('/api/mail-sender/recipients-list')
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.recipients && data.recipients.length > 0) {
+                const textarea = document.getElementById('recipients');
+                textarea.value = data.recipients.join('\n');
+                
+                // Обновить счетчик
+                const count = data.recipients.length;
+                document.getElementById('recipientCount').textContent = count;
+                
+                showResult('createCampaignResult', 
+                    `✓ Загружено ${count} получателей из раздела Email адреса`, 'success');
+            } else {
+                showResult('createCampaignResult', 
+                    '⚠ Нет получателей в разделе Email адреса', 'warning');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showResult('createCampaignResult', 
+                '✗ Ошибка при загрузке получателей', 'danger');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        });
+}
+
+// Сохранить текущий шаблон
+function saveTemplate() {
+    const templateName = document.getElementById('templateName').value.trim();
+    const subject = document.getElementById('emailSubject').value.trim();
+    const body = document.getElementById('emailBody').value.trim();
+    const html = document.getElementById('emailHtml').value.trim();
+
+    if (!templateName) {
+        showResult('createCampaignResult', '⚠ Введите название шаблона', 'warning');
+        return;
+    }
+
+    if (!subject || !body) {
+        showResult('createCampaignResult', '⚠ Заполните тему и текст письма', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('saveTemplateBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Сохранение...';
+
+    fetch('/api/mail-sender/save-template', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            name: templateName,
+            subject: subject,
+            body: body,
+            html: html
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showResult('createCampaignResult', `✓ ${data.message}`, 'success');
+            refreshTemplateList();
+            document.getElementById('templateName').value = '';
+        } else {
+            showResult('createCampaignResult', `✗ ${data.error}`, 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showResult('createCampaignResult', '✗ Ошибка при сохранении шаблона', 'danger');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+
+// Загрузить список сохраненных шаблонов
+function refreshTemplateList() {
+    fetch('/api/mail-sender/templates-list')
+        .then(r => r.json())
+        .then(data => {
+            const select = document.getElementById('templateList');
+            select.innerHTML = '<option value="">Выберите сохраненный шаблон...</option>';
+            
+            if (data.success && data.templates && data.templates.length > 0) {
+                data.templates.forEach(template => {
+                    const option = document.createElement('option');
+                    option.value = template.id;
+                    option.textContent = template.name;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+// Загрузить выбранный шаблон
+function loadTemplate() {
+    const select = document.getElementById('templateList');
+    const templateId = select.value;
+
+    if (!templateId) {
+        showResult('createCampaignResult', '⚠ Выберите шаблон из списка', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('loadTemplateBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Загрузка...';
+
+    fetch(`/api/mail-sender/load-template/${templateId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.template) {
+                const template = data.template;
+                document.getElementById('emailSubject').value = template.subject;
+                document.getElementById('emailBody').value = template.body;
+                document.getElementById('emailHtml').value = template.html || '';
+                document.getElementById('templateName').value = template.name;
+                
+                showResult('createCampaignResult', 
+                    `✓ Шаблон "${template.name}" загружен`, 'success');
+            } else {
+                showResult('createCampaignResult', '✗ Ошибка при загрузке шаблона', 'danger');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showResult('createCampaignResult', '✗ Ошибка при загрузке шаблона', 'danger');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        });
+}
+
+// Удалить шаблон
+function deleteTemplate() {
+    const select = document.getElementById('templateList');
+    const templateId = select.value;
+
+    if (!templateId) {
+        showResult('createCampaignResult', '⚠ Выберите шаблон для удаления', 'warning');
+        return;
+    }
+
+    const templateName = select.options[select.selectedIndex].text;
+    if (!confirm(`Вы уверены, что хотите удалить шаблон "${templateName}"?`)) {
+        return;
+    }
+
+    const btn = document.getElementById('deleteTemplateBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Удаление...';
+
+    fetch(`/api/mail-sender/delete-template/${templateId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCsrfToken()
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showResult('createCampaignResult', `✓ ${data.message}`, 'success');
+            refreshTemplateList();
+            document.getElementById('emailSubject').value = '';
+            document.getElementById('emailBody').value = '';
+            document.getElementById('emailHtml').value = '';
+            document.getElementById('templateName').value = '';
+        } else {
+            showResult('createCampaignResult', `✗ ${data.error}`, 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showResult('createCampaignResult', '✗ Ошибка при удалении шаблона', 'danger');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+
+// Вспомогательные функции
+function goToStep(step) {
+    for (let i = 1; i <= 4; i++) {
+        document.getElementById(`step${i}-content`).style.display = i === step ? 'block' : 'none';
+        document.getElementById(`step${i}`).classList.remove('active', 'completed');
+        if (i < step) document.getElementById(`step${i}`).classList.add('completed');
+        if (i === step) document.getElementById(`step${i}`).classList.add('active');
+    }
+}
+
+function goBackToStep2() {
+    goToStep(2);
+}
+
+function showResult(elementId, message, type) {
+    const div = document.getElementById(elementId);
+    div.innerHTML = `<div class="alert alert-${type}" role="alert">${message}</div>`;
+}
+
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
+function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+    loadMailAccounts();
+    refreshTemplateList();
+
+    // Инициализация графика
+    const ctx = document.getElementById('statsChart');
+    if (ctx) {
+        statsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Отправлено',
+                        data: [],
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Ошибки',
+                        data: [],
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Статистика отправки по часам'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Установить текущую дату и время
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    document.getElementById('startDate').value = now.toISOString().slice(0, 16);
+
+    const end = new Date(now);
+    end.setHours(end.getHours() + 24);
+    document.getElementById('endDate').value = end.toISOString().slice(0, 16);
+});
+</script>
+
+</body>
+</html>

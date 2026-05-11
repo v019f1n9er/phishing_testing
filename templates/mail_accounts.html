@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Управление Почтовыми Учетными Записями</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background-color: #e8f2fa;
+            color: #32475d;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            padding-bottom: 2rem;
+        }
+
+        .content-wrapper {
+            width: 82%;
+            max-width: 1100px;
+            margin: 0 auto;
+            transition: all 0.4s ease;
+            padding-bottom: 2rem;
+        }
+
+        @media (max-width: 1000px) {
+            .content-wrapper {
+                width: 100%;
+                max-width: 100%;
+                padding: 0 1rem;
+            }
+        }
+
+        .card, .table-wrapper, .form-section, .notification-item, .step, .schedule-preview {
+            border-radius: 18px;
+            border: 1px solid rgba(81, 110, 138, 0.18);
+            background: #f5f9fd;
+            box-shadow: 0 14px 30px rgba(73, 102, 134, 0.08);
+            transition: all 0.35s ease;
+        }
+
+        .card-body,
+        .form-section,
+        .schedule-preview,
+        .notification-item {
+            background: rgba(243, 249, 255, 0.95);
+        }
+
+        .card-header {
+            background: #eef5fb;
+            border-bottom: 1px solid rgba(81, 110, 138, 0.18);
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background: #ecf5fb;
+            border: none;
+            box-shadow: none;
+        }
+
+        table {
+            width: 100%;
+            table-layout: auto;
+            transition: all 0.4s ease;
+        }
+
+        th, td {
+            font-size: 14px;
+            padding: 0.75rem;
+            vertical-align: middle;
+            transition: background-color 0.3s ease;
+        }
+
+        thead th {
+            background: #d9e7f2;
+            color: #3d5f7f;
+            border-bottom: 1px solid rgba(81, 110, 138, 0.18);
+        }
+
+        table.table-striped tbody tr:nth-of-type(odd) {
+            background: rgba(230, 243, 252, 0.7);
+        }
+
+        #rowCount {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #4f6b86;
+        }
+
+        .controls select,
+        .controls button {
+            transition: all 0.3s ease;
+        }
+
+        .user-logout {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+            z-index: 10;
+        }
+
+        .user-logout,
+        .password-input-wrapper,
+        .service-buttons {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .user-logout {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+            z-index: 10;
+        }
+
+        .password-toggle input[type="checkbox"] {
+            margin: 0;
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .protocol-badge,
+        .status-badge,
+        .btn,
+        .form-control,
+        .form-select,
+        textarea,
+        .upload-area {
+            border-radius: 14px;
+        }
+
+        .form-control,
+        .form-select,
+        textarea {
+            border-color: rgba(81, 110, 138, 0.18);
+            background: #eef5fb;
+            color: #32475d;
+        }
+
+        textarea {
+            font-family: monospace;
+        }
+
+        .form-section {
+            background: #eef5fb;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area {
+            min-height: 150px;
+            border: 1px dashed rgba(81, 110, 138, 0.3);
+            background: rgba(227, 240, 250, 0.55);
+            padding: 1rem;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: rgba(81, 110, 138, 0.6);
+            background: rgba(226, 240, 251, 0.8);
+        }
+
+        .nav-tabs-custom {
+            border-bottom: 1px solid rgba(81, 110, 138, 0.25);
+            margin-bottom: 1.25rem;
+        }
+
+        .nav-tabs-custom .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            background: none;
+            color: #4e6f8a;
+            font-weight: 500;
+            padding: 0.8rem 1rem;
+            margin-right: 0.25rem;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .nav-tabs-custom .nav-link:hover {
+            color: #2f4e6c;
+            background-color: rgba(226, 240, 251, 0.85);
+            border-bottom-color: rgba(81, 110, 138, 0.25);
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            color: #2f4e6c;
+            background-color: #e7f3fb;
+            border-bottom-color: #6d93b5;
+            font-weight: 600;
+        }
+
+        .nav-tabs-custom .nav-link.active:hover {
+            background-color: #e7f3fb;
+        }
+
+        .metric-box,
+        .analytics-card,
+        .stat-item,
+        .step,
+        .notification-item {
+            border-radius: 16px;
+        }
+
+        .metric-box {
+            background: #eaf2fa;
+            border-left: 4px solid #7a9fc3;
+            padding: 1rem;
+            min-height: 120px;
+        }
+
+        .metric-box .label {
+            display: block;
+            color: #5c7b95;
+            font-size: 13px;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .metric-box .value {
+            color: #2f4f72;
+            font-size: 1.9rem;
+            font-weight: 700;
+        }
+
+        .analytics-card {
+            border-left: 4px solid #7a9fc3;
+            background: linear-gradient(135deg, #e7f3fb 0%, #ffffff 100%);
+        }
+
+        .stat-item {
+            border-left: 4px solid #81a4c3;
+            background: #eef6fb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .stat-label {
+            color: #4a6c8b;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            color: #2f4f72;
+            font-weight: 700;
+        }
+
+        .step {
+            min-width: 150px;
+            padding: 1rem;
+            background: #d7e6f3;
+            transition: all 0.3s ease;
+        }
+
+        .step.active,
+        .step.completed {
+            background: #aec7dc;
+            color: #2e4d69;
+        }
+
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #5f7ea3;
+            color: white;
+            font-size: 12px;
+            border: none;
+            cursor: help;
+        }
+
+        .tooltip-trigger:hover {
+            background-color: #4f6c8f;
+            transform: scale(1.05);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            top: 50%;
+            left: calc(100% + 0.5rem);
+            transform: translateY(-50%);
+            background-color: #2d4f72;
+            color: #f8f0e4;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            max-width: 260px;
+            word-wrap: break-word;
+            box-shadow: 0 12px 24px rgba(45, 79, 114, 0.15);
+        }
+
+        .tooltip-content::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -6px;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: #2d4f72;
+        }
+
+        .tooltip-content.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(-50%) translateX(0) !important;
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                display: none;
+            }
+        }
+
+        .progress-container {
+            margin-top: 0.75rem;
+        }
+
+        .btn-primary {
+            background-color: #5d8abf;
+            border-color: #5d8abf;
+            color: #fff;
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #5176a6;
+            border-color: #5176a6;
+        }
+
+        .btn-success {
+            background-color: #4f7eab;
+            border-color: #4f7eab;
+            color: #fff;
+        }
+
+        .btn-success:hover,
+        .btn-success:focus {
+            background-color: #406c92;
+            border-color: #406c92;
+        }
+
+        .btn-outline-secondary {
+            color: #4e6f8a;
+            border-color: #a9c0d8;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #e6f0f8;
+            color: #2f4f72;
+        }
+
+        .btn-danger {
+            background-color: #7d5f62;
+            border-color: #7d5f62;
+            color: #fff;
+        }
+
+        .btn-danger:hover,
+        .btn-danger:focus {
+            background-color: #6d4f55;
+            border-color: #6d4f55;
+        }
+
+        .text-primary {
+            color: #3f5f7c !important;
+        }
+
+        .text-success {
+            color: #4f7a86 !important;
+        }
+
+        .text-warning {
+            color: #5a7c95 !important;
+        }
+
+        .text-danger {
+            color: #7f4d57 !important;
+        }
+
+        .alert-custom {
+            margin-top: 1rem;
+            background: #e6f1fa;
+            border: 1px solid rgba(81, 110, 138, 0.18);
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="container-fluid mt-4 content-wrapper">
+
+    <!-- Header -->
+    <div class="card shadow-sm mb-4 position-relative">
+        <div class="card-body">
+            <div>
+                <h3 class="card-title text-warning mb-2">
+                    Управление Почтовыми Учетными Записями
+                </h3>
+
+                <!-- Вкладки навигации -->
+                <nav class="nav-tabs-custom">
+                    <div class="d-flex gap-0 flex-wrap">
+                        <a href="/" class="nav-link dashboard">Dashboard</a>
+                        <a href="/emails" class="nav-link emails">Email адреса</a>
+                        <a href="/mail-accounts" class="nav-link mail-accounts active">Почтовые учетные записи</a>
+                        <a href="/mail-sender" class="nav-link mail-sender">Отправка писем</a>
+                        <a href="/analytics" class="nav-link analytics">Аналитика</a>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Пользователь и кнопка Выйти -->
+            <div class="user-logout">
+                <div class="text-muted small mb-0">{{ session.username }}</div>
+                <a href="/logout" class="btn btn-outline-secondary btn-sm">Выйти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Account Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Добавить новую учетную запись</h5>
+
+            <form id="addAccountForm" onsubmit="return false;">
+                <!-- Основные поля -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="emailInput" class="form-label">
+                            Email адрес
+                            <div class="tooltip-container">
+                                <button class="tooltip-trigger" type="button">?</button>
+                                <div class="tooltip-content">
+                                    <strong>Поддерживаемые сервисы:</strong><br>
+                                    Gmail, Outlook, Mail.ru, Yandex, Yahoo<br>
+                                    <small>Сервер и порт определяются автоматически</small>
+                                </div>
+                            </div>
+                        </label>
+                        <input 
+                            type="email" 
+                            class="form-control" 
+                            id="emailInput" 
+                            placeholder="example@gmail.com"
+                            required
+                            oninput="autoDetectService()"
+                        >
+                    </div>
+                    <div class="col-md-6">
+                        <label for="passwordInput" class="form-label">
+                            Пароль
+                            <div class="tooltip-container">
+                                <button class="tooltip-trigger" type="button">?</button>
+                                <div class="tooltip-content">
+                                    <strong>Важно:</strong><br>
+                                    Для Gmail используйте пароль приложения<br>
+                                    Для Outlook может потребоваться пароль приложения<br>
+                                    <small><a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: #add8e6;">Создать пароль Gmail →</a></small>
+                                </div>
+                            </div>
+                        </label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                class="form-control" 
+                                id="passwordInput" 
+                                placeholder="Введите пароль"
+                                required
+                            >
+                            <label class="password-toggle" title="Показать пароль">
+                                <input type="checkbox" id="showPasswordCheckbox" onchange="togglePasswordVisibility(this.checked)">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="protocolSelect" class="form-label">
+                        Протокол
+                        <div class="tooltip-container">
+                            <button class="tooltip-trigger" type="button">?</button>
+                            <div class="tooltip-content">
+                                <strong>IMAP:</strong> Синхронизирует все папки, поддерживает метки<br>
+                                <strong>POP3:</strong> Загружает только входящие, проще в настройке<br>
+                                <small>Рекомендуется IMAP для полного доступа</small>
+                            </div>
+                        </div>
+                    </label>
+                    <select class="form-select" id="protocolSelect" onchange="updateServerConfig()">
+                        <option value="IMAP">IMAP (OAuth, множество папок)</option>
+                        <option value="POP3">POP3 (простой, одна папка)</option>
+                    </select>
+                </div>
+
+                <!-- Раскрывающееся меню "Подробнее" -->
+                <div class="mb-3">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#advancedSettings" aria-expanded="false" aria-controls="advancedSettings">
+                        Подробнее
+                    </button>
+                </div>
+
+                <div class="collapse" id="advancedSettings">
+                    <div class="card card-body bg-light">
+                        <h6 class="mb-3">Дополнительные настройки сервера</h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="serviceSelect" class="form-label">Почтовый сервис (опционально)</label>
+                                <select class="form-select" id="serviceSelect" onchange="fillServiceConfig()">
+                                    <option value="">Другой сервис</option>
+                                    <option value="gmail">Gmail</option>
+                                    <option value="outlook">Outlook / Microsoft 365</option>
+                                    <option value="mail_ru">Mail.ru</option>
+                                    <option value="yandex">Yandex</option>
+                                    <option value="yahoo">Yahoo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="serverInput" class="form-label">
+                                    IMAP/POP3 сервер
+                                    <div class="tooltip-container">
+                                        <button class="tooltip-trigger" type="button">?</button>
+                                        <div class="tooltip-content">
+                                            Сервер определяется автоматически по email<br>
+                                            <strong>Примеры:</strong><br>
+                                            Gmail: imap.gmail.com<br>
+                                            Outlook: outlook.office365.com<br>
+                                            Yandex: imap.yandex.com
+                                        </div>
+                                    </div>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="serverInput" 
+                                    placeholder="imap.gmail.com"
+                                >
+                                <small class="form-text text-muted" id="serverHint"></small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="portInput" class="form-label">
+                                    Порт
+                                    <div class="tooltip-container">
+                                        <button class="tooltip-trigger" type="button">?</button>
+                                        <div class="tooltip-content">
+                                            <strong>Стандартные порты:</strong><br>
+                                            IMAP SSL: 993<br>
+                                            POP3 SSL: 995<br>
+                                            <small>Порт определяется автоматически по протоколу</small>
+                                        </div>
+                                    </div>
+                                </label>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    id="portInput" 
+                                    placeholder="993"
+                                    value="993"
+                                >
+                            </div>
+                            <div class="col-md-6">
+                                <label for="sslSelect" class="form-label">SSL/TLS</label>
+                                <select class="form-select" id="sslSelect">
+                                    <option value="true" selected>Да (Рекомендуется)</option>
+                                    <option value="false">Нет</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mb-0" id="serviceNotice" style="display:none;">
+                            <strong>⚠️ Примечание:</strong> <span id="serviceNoticeText"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary" onclick="addAccount()">
+                        Добавить учетную запись
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                        Очистить
+                    </button>
+                </div>
+
+                <div id="addAccountResult" class="alert-custom"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="d-flex justify-content-between align-items-center mb-3 controls flex-wrap gap-2">
+        <div>
+            <button class="btn btn-danger btn-sm" onclick="deleteSelected()">
+                Удалить выбранные
+            </button>
+        </div>
+        <div>
+            <button class="btn btn-info btn-sm" onclick="refreshAccounts()">
+                Обновить
+            </button>
+        </div>
+    </div>
+
+    <!-- Row Count -->
+    <p id="rowCount" class="text-muted"></p>
+
+    <!-- Accounts Table -->
+    <div class="card shadow-sm table-wrapper">
+        <div class="card-body p-0">
+            <table class="table table-striped table-hover table-sm mb-0" id="accountsTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width:40px">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
+                        <th>Email адрес</th>
+                        <th>Протокол</th>
+                        <th>Сервер</th>
+                        <th>Порт</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="accountsTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="noAccounts" class="alert alert-secondary mt-4 text-center" style="display:none;">
+        Нет добавленных почтовых учетных записей. Добавьте первую учетную запись выше.
+    </div>
+
+</div>
+
+<script>
+const selectedAccountIds = new Set();
+
+// Service configurations
+const serviceConfigs = {
+    gmail: {
+        imap_server: 'imap.gmail.com',
+        imap_port: 993,
+        pop3_server: 'pop.gmail.com',
+        pop3_port: 995,
+        notice: 'Для Gmail необходимо использовать пароль приложения. Получите его по адресу myaccount.google.com/apppasswords'
+    },
+    outlook: {
+        imap_server: 'outlook.office365.com',
+        imap_port: 993,
+        pop3_server: 'outlook.office365.com',
+        pop3_port: 995,
+        notice: 'Для Outlook может потребоваться пароль приложения, если включена двухфакторная аутентификация'
+    },
+    mail_ru: {
+        imap_server: 'imap.mail.ru',
+        imap_port: 993,
+        pop3_server: 'pop.mail.ru',
+        pop3_port: 995
+    },
+    yandex: {
+        imap_server: 'imap.yandex.com',
+        imap_port: 993,
+        pop3_server: 'pop.yandex.com',
+        pop3_port: 995
+    },
+    yahoo: {
+        imap_server: 'imap.mail.yahoo.com',
+        imap_port: 993,
+        pop3_server: 'pop.mail.yahoo.com',
+        pop3_port: 995,
+        notice: 'Для Yahoo необходимо использовать пароль приложения'
+    }
+};
+
+function togglePasswordVisibility(isChecked) {
+    const input = document.getElementById('passwordInput');
+    input.type = isChecked ? 'text' : 'password';
+}
+
+function autoDetectService() {
+    const email = document.getElementById('emailInput').value.trim();
+    const domain = email.split('@')[1]?.toLowerCase();
+    
+    if (!domain) return;
+    
+    let service = null;
+    if (domain.includes('gmail.com')) service = 'gmail';
+    else if (domain.includes('outlook.com') || domain.includes('office365.com') || domain.includes('hotmail.com')) service = 'outlook';
+    else if (domain.includes('mail.ru')) service = 'mail_ru';
+    else if (domain.includes('yandex.com') || domain.includes('yandex.ru')) service = 'yandex';
+    else if (domain.includes('yahoo.com')) service = 'yahoo';
+    
+    if (service) {
+        document.getElementById('serviceSelect').value = service;
+        fillServiceConfig();
+    }
+}
+
+function updateServerConfig() {
+    const protocol = document.getElementById('protocolSelect').value;
+    const port = protocol === 'IMAP' ? 993 : 995;
+    document.getElementById('portInput').value = port;
+    
+    const service = document.getElementById('serviceSelect').value;
+    if (service) {
+        fillServiceConfig();
+    }
+}
+
+function fillServiceConfig() {
+    const service = document.getElementById('serviceSelect').value;
+    const protocol = document.getElementById('protocolSelect').value;
+    const notice = document.getElementById('serviceNotice');
+    const noticeText = document.getElementById('serviceNoticeText');
+    
+    if (!service) {
+        notice.style.display = 'none';
+        document.getElementById('serverInput').value = '';
+        document.getElementById('serverHint').textContent = '';
+        return;
+    }
+    
+    const config = serviceConfigs[service];
+    const server = protocol === 'IMAP' ? config.imap_server : config.pop3_server;
+    const port = protocol === 'IMAP' ? config.imap_port : config.pop3_port;
+    
+    document.getElementById('serverInput').value = server;
+    document.getElementById('portInput').value = port;
+    
+    if (config.notice) {
+        noticeText.textContent = config.notice;
+        notice.style.display = 'block';
+    } else {
+        notice.style.display = 'none';
+    }
+}
+
+function resetForm() {
+    document.getElementById('addAccountForm').reset();
+    document.getElementById('serviceSelect').value = '';
+    document.getElementById('protocolSelect').value = 'IMAP';
+    document.getElementById('portInput').value = 993;
+    document.getElementById('serverInput').value = '';
+    document.getElementById('addAccountResult').innerHTML = '';
+    document.getElementById('serviceNotice').style.display = 'none';
+    
+    // Скрываем раскрытое меню "Подробнее"
+    const collapseElement = document.getElementById('advancedSettings');
+    if (collapseElement.classList.contains('show')) {
+        const bsCollapse = new bootstrap.Collapse(collapseElement, {
+            hide: true
+        });
+    }
+}
+
+function addAccount() {
+    const email = document.getElementById('emailInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    const protocol = document.getElementById('protocolSelect').value;
+    
+    // Получаем значения из формы (могут быть пустыми)
+    let server = document.getElementById('serverInput').value.trim();
+    let port = parseInt(document.getElementById('portInput').value);
+    const useSSL = document.getElementById('sslSelect').value === 'true';
+    
+    if (!email || !password) {
+        showResult('addAccountResult', 'Пожалуйста, заполните email и пароль', 'danger');
+        return;
+    }
+    
+    // Автоматически определяем сервер и порт, если они не указаны
+    if (!server || !port) {
+        const domain = email.split('@')[1]?.toLowerCase();
+        if (domain) {
+            // Определяем сервис по домену
+            let service = null;
+            if (domain.includes('gmail.com')) service = 'gmail';
+            else if (domain.includes('outlook.com') || domain.includes('office365.com') || domain.includes('hotmail.com')) service = 'outlook';
+            else if (domain.includes('mail.ru')) service = 'mail_ru';
+            else if (domain.includes('yandex.com') || domain.includes('yandex.ru')) service = 'yandex';
+            else if (domain.includes('yahoo.com')) service = 'yahoo';
+            
+            if (service && serviceConfigs[service]) {
+                const config = serviceConfigs[service];
+                server = protocol === 'IMAP' ? config.imap_server : config.pop3_server;
+                port = protocol === 'IMAP' ? config.imap_port : config.pop3_port;
+            } else {
+                // Для неизвестных доменов используем стандартные настройки
+                server = protocol === 'IMAP' ? `imap.${domain}` : `pop.${domain}`;
+                port = protocol === 'IMAP' ? 993 : 995;
+            }
+        } else {
+            showResult('addAccountResult', 'Некорректный email адрес', 'danger');
+            return;
+        }
+    }
+    
+    const resultDiv = document.getElementById('addAccountResult');
+    resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Добавление...</span></div> Добавление учетной записи...';
+    
+    fetch('/api/mail-accounts/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        },
+        body: JSON.stringify({
+            email_address: email,
+            password: password,
+            protocol: protocol,
+            server: server,
+            port: port,
+            use_ssl: useSSL
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showResult('addAccountResult', '✓ ' + data.message, 'success');
+            resetForm();
+            loadAccounts();
+        } else {
+            showResult('addAccountResult', '✗ ' + data.error, 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showResult('addAccountResult', '✗ Ошибка при добавлении учетной записи', 'danger');
+    });
+}
+
+function loadAccounts() {
+    fetch('/api/mail-accounts/list', {
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        const tbody = document.getElementById('accountsTableBody');
+        const noAccounts = document.getElementById('noAccounts');
+        
+        tbody.innerHTML = '';
+        selectedAccountIds.clear();
+        document.getElementById('selectAll').checked = false;
+        
+        if (!data.accounts || data.accounts.length === 0) {
+            noAccounts.style.display = 'block';
+            document.getElementById('rowCount').textContent = '';
+            return;
+        }
+        
+        noAccounts.style.display = 'none';
+        document.getElementById('rowCount').textContent = `Всего: ${data.accounts.length} учетных записей`;
+        
+        data.accounts.forEach(acc => {
+            const protocolBadgeClass = acc.protocol === 'IMAP' ? 'protocol-imap' : 'protocol-pop3';
+            const statusClass = acc.status === 'connected' ? 'status-connected' : 'status-disconnected';
+            const statusText = acc.status === 'connected' ? '🟢 Подключена' : '🔴 Отключена';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="checkbox" value="${acc.id}" onchange="updateSelected()"></td>
+                <td><strong>${escapeHtml(acc.email)}</strong></td>
+                <td><span class="badge protocol-badge ${protocolBadgeClass}">${acc.protocol}</span></td>
+                <td>${escapeHtml(acc.server)}</td>
+                <td>${acc.port}</td>
+                <td><span class="${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-info" onclick="testAccount('${acc.id}')">🧪 Тест</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteAccount('${acc.id}')">Удалить</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    })
+    .catch(err => console.error('Ошибка загрузки учетных записей:', err));
+}
+
+function updateSelected() {
+    selectedAccountIds.clear();
+    document.querySelectorAll('#accountsTableBody input[type="checkbox"]:checked').forEach(cb => {
+        selectedAccountIds.add(cb.value);
+    });
+    
+    const allCheckboxes = document.querySelectorAll('#accountsTableBody input[type="checkbox"]');
+    const checkedCheckboxes = document.querySelectorAll('#accountsTableBody input[type="checkbox"]:checked');
+    document.getElementById('selectAll').checked = allCheckboxes.length > 0 && allCheckboxes.length === checkedCheckboxes.length;
+}
+
+function toggleSelectAll() {
+    const isChecked = document.getElementById('selectAll').checked;
+    document.querySelectorAll('#accountsTableBody input[type="checkbox"]').forEach(cb => {
+        cb.checked = isChecked;
+    });
+    updateSelected();
+}
+
+function testAccount(accountId) {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Проверка...';
+    btn.disabled = true;
+    
+    fetch(`/api/mail-accounts/test/${accountId}`, {
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('✓ Подключение успешно!\n' + (data.message || ''));
+        } else {
+            alert('✗ Ошибка подключения:\n' + data.error);
+        }
+    })
+    .catch(err => {
+        alert('✗ Ошибка проверки подключения');
+        console.error(err);
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function deleteAccount(accountId) {
+    if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
+    
+    fetch(`/api/mail-accounts/delete/${accountId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showResult('addAccountResult', '✓ Учетная запись удалена', 'success');
+            loadAccounts();
+        } else {
+            showResult('addAccountResult', '✗ ' + data.error, 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showResult('addAccountResult', '✗ Ошибка при удалении', 'danger');
+    });
+}
+
+function deleteSelected() {
+    if (selectedAccountIds.size === 0) {
+        alert('Выберите учетные записи для удаления');
+        return;
+    }
+    
+    if (!confirm(`Вы хотите удалить ${selectedAccountIds.size} учетную(ые) запись(и)?`)) return;
+    
+    const ids = Array.from(selectedAccountIds);
+    
+    Promise.all(ids.map(id => 
+        fetch(`/api/mail-accounts/delete/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            }
+        }).then(r => r.json())
+    ))
+    .then(results => {
+        const successful = results.filter(r => r.success).length;
+        showResult('addAccountResult', `✓ Удалено ${successful} из ${ids.length} записей`, 'success');
+        loadAccounts();
+    })
+    .catch(err => {
+        console.error(err);
+        showResult('addAccountResult', '✗ Ошибка при удалении', 'danger');
+    });
+}
+
+function refreshAccounts() {
+    loadAccounts();
+}
+
+function showResult(elementId, message, type) {
+    const resultDiv = document.getElementById(elementId);
+    resultDiv.innerHTML = `<div class="alert alert-${type}" role="alert">${message}</div>`;
+    setTimeout(() => {
+        if (resultDiv.querySelector('.alert')) {
+            resultDiv.innerHTML = '';
+        }
+    }, 5000);
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// Load accounts on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAccounts();
+    
+    // Tooltip functionality with delay
+    const tooltipContainers = document.querySelectorAll('.tooltip-container');
+    
+    tooltipContainers.forEach(container => {
+        const trigger = container.querySelector('.tooltip-trigger');
+        const content = container.querySelector('.tooltip-content');
+        let hideTimeout;
+        
+        // Show tooltip on mouse enter
+        container.addEventListener('mouseenter', function() {
+            clearTimeout(hideTimeout);
+            content.classList.add('show');
+        });
+        
+        // Hide tooltip on mouse leave with delay
+        container.addEventListener('mouseleave', function() {
+            hideTimeout = setTimeout(() => {
+                content.classList.remove('show');
+            }, 300); // 300ms delay
+        });
+        
+        // Keep tooltip visible when hovering over content
+        content.addEventListener('mouseenter', function() {
+            clearTimeout(hideTimeout);
+        });
+        
+        content.addEventListener('mouseleave', function() {
+            hideTimeout = setTimeout(() => {
+                content.classList.remove('show');
+            }, 300);
+        });
+    });
+});
+</script>
+
+<!-- Bootstrap 5 JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

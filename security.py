@@ -13,9 +13,15 @@ def csrf_protect():
         form_token = (
             request.form.get('_csrf_token')
             or request.headers.get('X-CSRF-Token')
+            or request.headers.get('X-CSRFToken')
         )
+        print(f"DEBUG CSRF: session token = {token}")
+        print(f"DEBUG CSRF: form token = {form_token}")
+        print(f"DEBUG CSRF: headers = {dict(request.headers)}")
         if not token or token != form_token:
+            print("DEBUG CSRF: validation failed")
             return "CSRF validation failed", 403
+        print("DEBUG CSRF: validation passed")
 
 def session_timeout_check():
     if session.get('user_id'):
